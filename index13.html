@@ -1,0 +1,1599 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tolddata · CW Spedition</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+  :root {
+    --bg:#F5F4F0; --surface:#FFFFFF; --surface-soft:#F9F8F4;
+    --border:rgba(15,14,12,0.10); --border-strong:rgba(15,14,12,0.18);
+    --text:#0F0E0C; --text-muted:#73716A; --text-faint:#A8A69E;
+    --green-50:#EAF3DE; --green-200:#C0DD97; --green-600:#3B6D11; --green-900:#173404;
+    --blue-50:#E6F1FB; --blue-200:#85B7EB; --blue-600:#185FA5; --blue-900:#042C53;
+    --amber-50:#FAEEDA; --amber-200:#FAC775; --amber-600:#854F0B; --amber-900:#412402;
+    --red-50:#FCEBEB; --red-200:#F09595; --red-600:#A32D2D; --red-900:#501313;
+    --focus-ring:0 0 0 3px rgba(24,95,165,0.20);
+    --radius:6px; --radius-md:8px; --radius-lg:12px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;}
+  body{min-height:100vh;}
+  .mono{font-family:'JetBrains Mono',ui-monospace,monospace;font-feature-settings:"tnum";}
+  button{font-family:inherit;cursor:pointer;}
+  input,select,textarea{font-family:inherit;font-size:inherit;color:inherit;}
+  table{border-collapse:collapse;}
+
+  /* ─── Top bar (sticky) ──────────────────────────────────── */
+  .topbar{position:sticky;top:0;z-index:50;background:var(--surface);border-bottom:0.5px solid var(--border);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;}
+  .topbar-left{display:flex;align-items:center;gap:10px;}
+  .icon-btn{width:32px;height:32px;border-radius:var(--radius);background:transparent;border:none;display:inline-flex;align-items:center;justify-content:center;color:var(--text-muted);transition:background 0.12s;}
+  .icon-btn:hover{background:var(--surface-soft);color:var(--text);}
+  .topbar-title{font-size:14.5px;font-weight:500;}
+  .topbar-right{display:flex;gap:6px;}
+  .btn-ghost{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);padding:6px 11px;font-size:12.5px;color:var(--text);display:inline-flex;align-items:center;gap:5px;transition:all 0.12s;}
+  .btn-ghost:hover{background:var(--surface-soft);border-color:var(--border-strong);}
+
+  main{max-width:1100px;margin:0 auto;padding:24px 24px 100px;}
+
+  /* ─── Upload zone ────────────────────────────────────────── */
+  .upload-zone{background:var(--surface);border:1.5px dashed var(--border-strong);border-radius:var(--radius-lg);padding:56px 32px;text-align:center;cursor:pointer;transition:all 0.15s;}
+  .upload-zone:hover,.upload-zone.drag-over{border-color:var(--text);background:var(--surface-soft);}
+  .upload-icon{width:48px;height:48px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);}
+  .upload-zone h2{font-size:16px;font-weight:500;margin-bottom:4px;}
+  .upload-zone p{font-size:13px;color:var(--text-muted);}
+
+  /* ─── Loading ────────────────────────────────────────────── */
+  #loading{display:none;background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:40px;text-align:center;}
+  .progress-steps{display:flex;justify-content:center;border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden;max-width:500px;margin:0 auto 20px;}
+  .progress-step{flex:1;padding:9px 4px;font-size:11px;color:var(--text-faint);font-weight:500;border-right:0.5px solid var(--border);transition:all 0.3s;}
+  .progress-step:last-child{border-right:none;}
+  .progress-step.active{background:var(--text);color:#fff;}
+  .progress-step.done{background:var(--green-50);color:var(--green-900);}
+  .loading-file{font-size:13px;color:var(--text-muted);}
+
+  /* ─── Cards ───────────────────────────────────────────────── */
+  .card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-lg);margin-bottom:14px;overflow:hidden;}
+  .card-body{padding:1.25rem 1.5rem;}
+  .card-grid-2col{display:grid;grid-template-columns:1fr auto;gap:1.5rem;}
+  .card-divider-v{border-left:0.5px solid var(--border);padding-left:1.5rem;min-width:280px;}
+
+  .label{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;font-weight:500;margin-bottom:10px;}
+
+  /* ─── Modul-checkboxes ───────────────────────────────────── */
+  .modules-row{display:flex;gap:7px;flex-wrap:wrap;}
+  .mod-chk{display:inline-flex;align-items:center;gap:7px;padding:7px 13px;border-radius:var(--radius-md);background:var(--surface-soft);color:var(--text-muted);font-size:13.5px;border:0.5px solid var(--border);cursor:pointer;transition:all 0.12s;font-weight:500;}
+  .mod-chk:hover{border-color:var(--border-strong);}
+  .mod-chk input{width:14px;height:14px;cursor:pointer;}
+  .mod-chk.on-dk-ex{background:var(--green-50);color:var(--green-900);border-color:var(--green-200);}
+  .mod-chk.on-dk-ex input{accent-color:var(--green-600);}
+  .mod-chk.on-dk-im{background:var(--blue-50);color:var(--blue-900);border-color:var(--blue-200);}
+  .mod-chk.on-dk-im input{accent-color:var(--blue-600);}
+  .mod-chk.on-no-ex{background:var(--amber-50);color:var(--amber-900);border-color:var(--amber-200);}
+  .mod-chk.on-no-ex input{accent-color:var(--amber-600);}
+  .mod-chk.on-no-im{background:var(--red-50);color:var(--red-900);border-color:var(--red-200);}
+  .mod-chk.on-no-im input{accent-color:var(--red-600);}
+
+  /* ─── Grænser/transport ──────────────────────────────────── */
+  .borders-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px;}
+  .borders-grid .key{font-size:11.5px;color:var(--text-muted);margin-bottom:2px;}
+  .borders-grid .val{font-size:13.5px;font-weight:500;}
+  .borders-grid .val.mono{font-family:'JetBrains Mono',monospace;}
+
+  /* ─── MRN-felt ───────────────────────────────────────────── */
+  #mrnWrap{display:none;margin-top:10px;padding:10px 12px;background:var(--red-50);border:0.5px solid var(--red-200);border-radius:var(--radius-md);align-items:center;gap:8px;}
+  #mrnWrap label{font-size:12px;color:var(--red-900);font-weight:500;}
+  #mrnWrap input{font-family:'JetBrains Mono',monospace;font-size:12.5px;padding:5px 8px;border:0.5px solid var(--red-200);border-radius:5px;width:220px;background:var(--surface);outline:none;}
+  #mrnWrap input:focus{box-shadow:var(--focus-ring);border-color:var(--blue-600);}
+
+  /* ─── Transport detail (foldes ud) ───────────────────────── */
+  .transport-detail{display:none;margin-top:14px;padding-top:14px;border-top:0.5px solid var(--border);}
+  .transport-detail.open{display:block;}
+  .td-row{display:grid;grid-template-columns:140px 1fr;gap:10px;align-items:center;margin-bottom:8px;}
+  .td-row label{font-size:12px;color:var(--text-muted);}
+  .td-row input,.td-row select{width:100%;padding:7px 10px;font-size:13px;border:0.5px solid var(--border);border-radius:5px;background:var(--surface);outline:none;}
+  .td-row input:focus,.td-row select:focus{border-color:var(--blue-600);box-shadow:var(--focus-ring);}
+  .td-bil-row{display:grid;grid-template-columns:1fr 80px;gap:6px;}
+  .td-section-title{font-size:11px;color:var(--amber-900);text-transform:uppercase;letter-spacing:0.06em;font-weight:500;margin:12px 0 6px;}
+  .td-no-ex{background:var(--amber-50);border:0.5px solid var(--amber-200);border-radius:var(--radius-md);padding:10px 12px;margin-top:10px;display:none;}
+  .td-no-ex.show{display:block;}
+  .td-no-im{background:var(--red-50);border:0.5px solid var(--red-200);border-radius:var(--radius-md);padding:10px 12px;margin-top:10px;display:none;}
+  .td-no-im.show{display:block;}
+  .td-no-im .td-section-title{color:var(--red-900);}
+  .td-dk-ex{display:none;}
+  .td-dk-ex.show{display:block;}
+
+  /* NO Eksport bilnr-options */
+  #noExBilnrOptionsWrap{display:none;margin-bottom:8px;padding:8px 10px;background:var(--surface-soft);border:0.5px solid var(--border);border-radius:5px;}
+  #noExBilnrOptionsWrap .opt-label{font-size:11.5px;color:var(--amber-900);margin-bottom:5px;}
+  #noExBilnrOptions{display:flex;gap:5px;flex-wrap:wrap;}
+  .bilnr-opt{padding:4px 10px;background:var(--surface);border:0.5px solid var(--amber-200);border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:12px;cursor:pointer;color:var(--amber-900);}
+  .bilnr-opt:hover{background:var(--amber-50);}
+
+  /* ─── Parties (afsender/modtager) ───────────────────────── */
+  .party{margin-bottom:18px;}
+  .party:last-child{margin-bottom:0;}
+  .party-name-input{width:100%;font-size:14.5px;font-weight:500;background:transparent;border:none;outline:none;padding:0;color:var(--text);}
+  .party-addr-input{width:100%;font-size:13px;background:transparent;border:none;outline:none;padding:1px 0;color:var(--text-muted);}
+  .party-addr-input:focus{color:var(--text);}
+  .party-cvr{font-size:12px;color:var(--text-muted);margin-top:4px;}
+  .party-cvr input{background:transparent;border:none;outline:none;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-muted);width:140px;}
+  .party-cvr input:focus{color:var(--text);}
+  .party-input-edit-hint{padding:1px 4px;border-radius:3px;margin:-1px -4px;transition:background 0.1s;}
+  .party-input-edit-hint:hover{background:var(--surface-soft);}
+  .party-input-edit-hint:focus{background:var(--surface-soft);box-shadow:inset 0 0 0 1px var(--blue-600);}
+
+  /* ─── Meta-tabel højre side ──────────────────────────────── */
+  .meta-table{width:100%;}
+  .meta-table td{padding:5px 0;font-size:13px;}
+  .meta-table td:first-child{color:var(--text-muted);padding-right:24px;}
+  .meta-table td:last-child{text-align:right;font-weight:500;}
+  .meta-table .num{font-variant-numeric:tabular-nums;}
+  .meta-table .mono{font-family:'JetBrains Mono',monospace;}
+  .meta-table input{background:transparent;border:none;outline:none;text-align:right;font-weight:500;color:var(--text);font-size:13px;width:140px;padding:1px 4px;border-radius:3px;}
+  .meta-table input:hover{background:var(--surface-soft);}
+  .meta-table input:focus{background:var(--surface-soft);box-shadow:inset 0 0 0 1px var(--blue-600);}
+  .meta-table input.mono{font-family:'JetBrains Mono',monospace;}
+  .meta-table input.num{font-variant-numeric:tabular-nums;}
+  .meta-section-head{padding:8px 0 4px;font-size:10.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;font-weight:500;border-top:0.5px solid var(--border);margin-top:4px;}
+  .meta-section-head.first{border-top:none;margin-top:0;padding-top:0;}
+
+  /* ─── Tabel-header med værktøjsikoner ───────────────────── */
+  .table-header{padding:0.875rem 1.5rem;display:flex;align-items:center;justify-content:space-between;border-bottom:0.5px solid var(--border);}
+  .table-title{font-size:14px;font-weight:500;}
+  .table-tools{display:flex;gap:2px;color:var(--text-muted);}
+  .table-tools .icon-btn{width:28px;height:28px;}
+
+  /* ─── Data-tabel ─────────────────────────────────────────── */
+  .data-table{width:100%;font-size:13px;}
+  .data-table thead th{padding:9px 8px;text-align:left;font-weight:500;color:var(--text-muted);font-size:11.5px;letter-spacing:0.02em;background:var(--surface-soft);}
+  .data-table thead th.num{text-align:right;}
+  .data-table thead th:first-child{padding-left:1.5rem;}
+  .data-table thead th:last-child{padding-right:1.5rem;}
+  .data-table tbody tr{border-top:0.5px solid var(--border);}
+  .data-table tbody td{padding:0;vertical-align:middle;}
+  .data-table tbody td.row-num{padding:11px 8px;color:var(--text-muted);font-size:12.5px;}
+  .data-table tbody td.row-num:first-child{padding-left:1.5rem;}
+  .data-table tbody td.row-actions{padding:0 1.5rem 0 0;text-align:center;width:34px;}
+  .cell-input{width:100%;background:transparent;border:none;outline:none;padding:10px 8px;font-size:13px;color:var(--text);transition:background 0.12s;font-family:inherit;}
+  .cell-input:hover{background:var(--surface-soft);}
+  .cell-input:focus{background:var(--surface-soft);box-shadow:inset 0 0 0 1px var(--blue-600);border-radius:3px;}
+  .cell-input.mono{font-family:'JetBrains Mono',monospace;font-size:12.5px;}
+  .cell-input.num{text-align:right;font-variant-numeric:tabular-nums;}
+  .cell-input.fordelt{color:var(--text-muted);font-style:italic;}
+  .cell-input.first{padding-left:1.5rem;}
+  .cell-input.last{padding-right:1.5rem;}
+  .hs-cell{display:flex;align-items:center;gap:2px;}
+  .hs-cell .cell-input{flex:1;min-width:0;}
+  .hs-warn{display:none;align-items:center;justify-content:center;width:18px;height:18px;color:var(--amber-600);font-size:13px;cursor:help;flex-shrink:0;margin-right:4px;}
+  .hs-warn:hover{color:var(--red-600);}
+  .row-del-btn{background:transparent;border:none;color:var(--text-faint);padding:6px;border-radius:3px;display:inline-flex;align-items:center;}
+  .row-del-btn:hover{background:var(--red-50);color:var(--red-600);}
+  .sum-row td{padding:11px 8px;font-weight:500;background:var(--surface-soft);border-top:0.5px solid var(--border);}
+  .sum-row td:first-child{padding-left:1.5rem;}
+  .sum-row td:last-child{padding-right:1.5rem;}
+  .sum-row td.num{text-align:right;font-variant-numeric:tabular-nums;}
+  .sum-row td.warn{color:var(--red-600);font-weight:700;}
+  .sum-warn-row td{padding:9px 1.5rem;background:var(--red-50);border-top:0.5px solid var(--red-200);font-size:12.5px;color:var(--red-900);}
+  .sum-warn-row td .pill{display:inline-block;background:var(--red-200);color:var(--red-900);padding:1px 7px;border-radius:10px;font-weight:600;font-size:11.5px;margin-right:6px;letter-spacing:0.02em;}
+  .sum-warn-row td .diff{font-family:'JetBrains Mono',monospace;font-weight:600;}
+
+  /* ─── Action bar ─────────────────────────────────────────── */
+  .action-bar{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:0.5px solid var(--border);padding:12px 24px;display:flex;justify-content:center;z-index:40;}
+  .action-bar-inner{max-width:1100px;width:100%;display:flex;align-items:center;gap:10px;}
+  .action-bar-inner .spacer{flex:1;}
+  .btn{padding:9px 16px;border-radius:var(--radius-md);font-size:13.5px;font-weight:500;border:0.5px solid var(--border);background:var(--surface);color:var(--text);transition:all 0.12s;display:inline-flex;align-items:center;gap:6px;}
+  .btn:hover{background:var(--surface-soft);border-color:var(--border-strong);}
+  .btn:disabled{opacity:0.5;cursor:not-allowed;}
+  .btn-primary{background:var(--green-600);color:#fff;border-color:var(--green-600);padding:10px 28px;}
+  .btn-primary:hover{background:var(--green-900);border-color:var(--green-900);}
+  .btn-secondary-danger{color:var(--red-600);border-color:var(--red-200);}
+  .btn-secondary-danger:hover{background:var(--red-50);}
+
+  /* ─── Pending banner ─────────────────────────────────────── */
+  #pendingBanner{display:none;background:#FFF8E1;border:0.5px solid #E5C26F;border-left:3px solid #E5C26F;padding:12px 16px;margin-bottom:14px;border-radius:var(--radius-md);}
+  #pendingBanner h2{margin:0 0 4px 0;font-size:14px;font-weight:500;color:#5C3D08;}
+  #pendingBanner p{margin:0;font-size:12.5px;color:#5C3D08;line-height:1.5;}
+  #pendingMailInfo{margin-top:10px;padding-top:10px;border-top:0.5px solid rgba(92,61,8,0.25);display:none;}
+  #pendingMailInfo .pending-cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  #pendingMailInfo h4{font-size:11px;color:#5C3D08;margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;}
+  #pendingMailInfoBody{font-size:12px;color:#5C3D08;line-height:1.6;}
+  #pendingMailInfoBody div{margin-bottom:3px;}
+  #pendingMailTekst{font-size:11.5px;color:#5C3D08;background:#FFFEF5;border:0.5px solid #F0DC9C;border-radius:5px;padding:7px 9px;max-height:120px;overflow-y:auto;white-space:pre-wrap;font-family:'JetBrains Mono',monospace;}
+
+  /* ─── Error + AI note ────────────────────────────────────── */
+  .error-box{background:var(--red-50);border:0.5px solid var(--red-200);border-radius:var(--radius-md);padding:12px 14px;font-size:13px;color:var(--red-900);display:none;margin-top:14px;}
+  .ai-note{background:var(--amber-50);border:0.5px solid var(--amber-200);border-radius:var(--radius-md);padding:9px 12px;font-size:12.5px;color:var(--amber-900);margin-bottom:14px;display:none;}
+
+  /* Toast-bekræftelse efter Kopier */
+  #approveBanner{position:fixed;top:70px;right:24px;background:var(--green-50);color:var(--green-900);border:0.5px solid var(--green-200);padding:10px 16px;border-radius:var(--radius-md);font-size:13px;font-weight:500;display:none;z-index:60;animation:slideIn 0.2s ease;}
+  @keyframes slideIn{from{transform:translateX(20px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+
+  /* Klassiske gamle felter — skjul de containere vi ikke bruger længere */
+  #statsBar,.results-meta,#docTypeBadge,#resultsFilename{display:none !important;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <button class="icon-btn" onclick="resetForm()" id="topbarBack" aria-label="Tilbage">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M5 12l4-4M5 12l4 4"/></svg>
+    </button>
+    <div class="topbar-title" id="topbarTitle">Tolddata · CW Spedition</div>
+  </div>
+  <div class="topbar-right" id="topbarActions" style="display:none;">
+    <button class="btn-ghost" onclick="visPDF()" id="btnVisPDF">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      Vis PDF
+    </button>
+  </div>
+</div>
+
+<main>
+
+  <div id="upload-section">
+    <div class="upload-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+      <div class="upload-icon">
+        <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="12" y1="18" x2="12" y2="12"/>
+          <line x1="9" y1="15" x2="15" y2="15"/>
+        </svg>
+      </div>
+      <h2>Upload tolddokument</h2>
+      <p>Træk én eller flere PDF'er hertil, eller klik for at vælge</p>
+      <input type="file" id="fileInput" accept=".pdf" multiple style="display:none" onchange="handleFiles(this.files)">
+    </div>
+    <div class="error-box" id="errorBox"></div>
+  </div>
+
+  <div id="loading">
+    <div class="progress-steps">
+      <div class="progress-step" data-step="0">Indlæser PDF</div>
+      <div class="progress-step" data-step="1">Identificerer type</div>
+      <div class="progress-step" data-step="2">Udtrækker felter</div>
+      <div class="progress-step" data-step="3">Validerer data</div>
+    </div>
+    <p class="loading-file" id="loadingFile"></p>
+  </div>
+
+  <div id="results" style="display:none;">
+
+    <div id="pendingBanner">
+      <h2>Afventer din godkendelse</h2>
+      <p id="pendingBannerText"></p>
+      <div id="pendingMailInfo">
+        <div class="pending-cols">
+          <div>
+            <h4>Robottens tolkning</h4>
+            <div id="pendingMailInfoBody"></div>
+          </div>
+          <div>
+            <h4>Mailtekst</h4>
+            <div id="pendingMailTekst"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ai-note" id="aiNote"></div>
+
+    <!-- ═══ KORT 1: MODULER + GRÆNSER ═══ -->
+    <div class="card">
+      <div class="card-body">
+        <div class="card-grid-2col">
+
+          <div>
+            <div class="label">Tolddeklarationer</div>
+            <div class="modules-row">
+              <label class="mod-chk" id="modChkDKEx"><input type="checkbox" id="chkDKExport" onchange="onModuleChange()"> DK Eksport</label>
+              <label class="mod-chk" id="modChkDKIm"><input type="checkbox" id="chkDKImport" onchange="onModuleChange()"> DK Import</label>
+              <label class="mod-chk" id="modChkNOEx"><input type="checkbox" id="chkNOExport" onchange="onModuleChange()"> NO Eksport</label>
+              <label class="mod-chk" id="modChkNOIm"><input type="checkbox" id="chkNOImport" onchange="onModuleChange()"> NO Import</label>
+            </div>
+            <div id="mrnWrap">
+              <label>MRN:</label>
+              <input type="text" id="inputMrn" placeholder="Indtast MRN nummer...">
+            </div>
+          </div>
+
+          <div class="card-divider-v">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+              <div class="label" style="margin:0;">Grænser &amp; transport</div>
+              <button class="btn-ghost" onclick="toggleTransportDetail()" id="btnTransportEdit" style="font-size:11.5px;padding:3px 9px;">Rediger</button>
+            </div>
+            <div class="borders-grid">
+              <div><div class="key">Opstart</div><div class="val" id="summaryOpstart">—</div></div>
+              <div><div class="key">Udgang</div><div class="val" id="summaryUdgang">—</div></div>
+              <div><div class="key">Form</div><div class="val" id="summaryForm">—</div></div>
+              <div><div class="key">Bil / skib</div><div class="val mono" id="summaryBilSkib">—</div></div>
+            </div>
+
+            <div class="transport-detail" id="transportDetail">
+              <div id="dkExportSection" class="td-dk-ex">
+                <div class="td-row">
+                  <label>Opstartstoldsted</label>
+                  <select id="selToldsted" onchange="updateToldsted();updateTransportSummary();">
+                    <optgroup label="── Nordjylland ──">
+                      <option value="DK003102">DK003102 — Hirtshals</option>
+                      <option value="DK003101">DK003101 — Frederikshavn</option>
+                      <option value="DK003103">DK003103 — Hanstholm</option>
+                      <option value="DK003104">DK003104 — Andre havne Nordjylland</option>
+                      <option value="DK003105">DK003105 — Skive Havn</option>
+                    </optgroup>
+                    <optgroup label="── Østjylland ──">
+                      <option value="DK004701">DK004701 — Aarhus Havn</option>
+                      <option value="DK004702">DK004702 — Aarhus Lufthavn / Grenaa</option>
+                      <option value="DK004703">DK004703 — Randers Havn</option>
+                      <option value="DK004704">DK004704 — Horsens Havn</option>
+                      <option value="DK004706">DK004706 — Herning</option>
+                    </optgroup>
+                    <optgroup label="── Sydjylland / Fyn ──">
+                      <option value="DK005604">DK005604 — Padborg</option>
+                      <option value="DK005605">DK005605 — Aabenraa Havn</option>
+                      <option value="DK005606">DK005606 — Billund Lufthavn</option>
+                      <option value="DK005607">DK005607 — Esbjerg</option>
+                      <option value="DK005611">DK005611 — Esbjerg Havn</option>
+                      <option value="DK005602">DK005602 — Centerhavn</option>
+                      <option value="DK005603">DK005603 — Kokholm</option>
+                    </optgroup>
+                    <optgroup label="── Sjælland ──">
+                      <option value="DK006600">DK006600 — Køge</option>
+                      <option value="DK006602">DK006602 — Nørre Alslev</option>
+                    </optgroup>
+                    <optgroup label="── København ──">
+                      <option value="DK007901">DK007901 — Kvæsthusbroen</option>
+                      <option value="DK007902">DK007902 — Frihavnen</option>
+                      <option value="DK007903">DK007903 — Københavns Lufthavn</option>
+                      <option value="DK007908">DK007908 — Kvistgård</option>
+                      <option value="DK007909">DK007909 — Bornholm</option>
+                    </optgroup>
+                  </select>
+                </div>
+                <div class="td-row" id="exitToldstedRow">
+                  <label>Udgangstoldsted</label>
+                  <select id="selExitToldsted" onchange="updateTransportSummary();">
+                    <option value="same">— Samme (sejler direkte) —</option>
+                    <optgroup label="── Sverige ──">
+                      <option value="SE060340">SE060340 — Svinesund</option>
+                      <option value="SE060341">SE060341 — Ørje</option>
+                      <option value="SE603360">SE603360 — Eda (Charlottenberg)</option>
+                      <option value="SE603340">SE603340 — Svinesund (Strömstad)</option>
+                    </optgroup>
+                  </select>
+                </div>
+                <div class="td-row" id="transportBaad">
+                  <label>Skibssagsnr.</label>
+                  <input type="text" id="inputSkibsnr" placeholder="fx CG62858" onchange="updateTransportSummary();">
+                </div>
+                <div class="td-row" id="transportKoerer" style="display:none;">
+                  <label>Bilnummer + nat.</label>
+                  <div class="td-bil-row">
+                    <input type="text" id="inputBilnr" placeholder="fx BSE69TU" onchange="updateTransportSummary();">
+                    <select id="selNationalitet" onchange="updateTransportSummary();">
+                      <option value="DK">DK</option><option value="LT">LT</option><option value="PL">PL</option>
+                      <option value="NO">NO</option><option value="SE">SE</option><option value="DE">DE</option>
+                      <option value="NL">NL</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div id="noExportSection" class="td-no-ex">
+                <div class="td-section-title">NO Eksport</div>
+                <div class="td-row">
+                  <label>Udgangstoldsted</label>
+                  <select id="selNoExCustomsCode" onchange="document.getElementById('noExCustomWrap').style.display=this.value==='__custom'?'grid':'none';updateTransportSummary();">
+                    <optgroup label="── Sverige ──">
+                      <option value="3770">3770 — Svinesund</option>
+                      <option value="3776">3776 — Hån</option>
+                      <option value="3778">3778 — Eda (Charlottenberg)</option>
+                    </optgroup>
+                    <option value="__custom">Andet — skriv selv...</option>
+                  </select>
+                </div>
+                <div class="td-row" id="noExCustomWrap" style="display:none;">
+                  <label>Skriv kode</label>
+                  <input type="text" id="inputNoExCustomsCodeCustom" onchange="updateTransportSummary();">
+                </div>
+                <div id="noExBilnrOptionsWrap">
+                  <div class="opt-label">Claude fandt flere bilnumre — klik for at vælge:</div>
+                  <div id="noExBilnrOptions"></div>
+                </div>
+                <div class="td-row">
+                  <label>Bilnummer + nat.</label>
+                  <div class="td-bil-row">
+                    <input type="text" id="inputNoExBilnr" placeholder="fx NSD233" onchange="updateTransportSummary();">
+                    <select id="selNoExNationalitet" onchange="updateTransportSummary();">
+                      <option value="PL">PL</option><option value="LT">LT</option><option value="NO">NO</option>
+                      <option value="SE">SE</option><option value="DE">DE</option><option value="AT">AT</option>
+                      <option value="DK">DK</option><option value="NL">NL</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div id="noImportSection" class="td-no-im">
+                <div class="td-section-title">NO Import</div>
+                <div class="td-row">
+                  <label>Norsk grænse (ankomst)</label>
+                  <select id="selNoImCustomsCode" onchange="document.getElementById('noImCustomWrap').style.display=this.value==='__custom'?'grid':'none';updateTransportSummary();">
+                    <optgroup label="── Norske grænseovergange ──">
+                      <option value="3770">3770 — Svinesund</option>
+                      <option value="3776">3776 — Hån</option>
+                      <option value="3778">3778 — Eda (Charlottenberg)</option>
+                    </optgroup>
+                    <option value="__custom">Andet — skriv selv...</option>
+                  </select>
+                </div>
+                <div class="td-row" id="noImCustomWrap" style="display:none;">
+                  <label>Skriv kode</label>
+                  <input type="text" id="inputNoImCustomsCodeCustom" onchange="updateTransportSummary();">
+                </div>
+                <div class="td-row">
+                  <label>Bilnummer + nat.</label>
+                  <div class="td-bil-row">
+                    <input type="text" id="inputNoImBilnr" placeholder="fx BSE69TU" onchange="updateTransportSummary();">
+                    <select id="selNoImNationalitet" onchange="updateTransportSummary();">
+                      <option value="DK">DK</option><option value="PL">PL</option><option value="LT">LT</option>
+                      <option value="NO">NO</option><option value="SE">SE</option><option value="DE">DE</option>
+                      <option value="NL">NL</option><option value="AT">AT</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ KORT 2: PARTIER + META ═══ -->
+    <div class="card">
+      <div class="card-body">
+        <div class="card-grid-2col" style="grid-template-columns:1fr 340px;">
+
+          <div>
+            <div class="party">
+              <div class="label">Afsender</div>
+              <input class="party-name-input party-input-edit-hint field-input" data-field="Afsender navn" placeholder="Afsender navn..." />
+              <input class="party-addr-input party-input-edit-hint field-input" data-field="Afsender gade" placeholder="Gade..." />
+              <div style="display:flex;gap:6px;align-items:baseline;">
+                <input class="party-addr-input party-input-edit-hint field-input" data-field="Afsender postnummer" placeholder="Postnr." style="width:60px;flex:none;" />
+                <input class="party-addr-input party-input-edit-hint field-input" data-field="Afsender by" placeholder="By" style="flex:1;" />
+                <input class="party-addr-input party-input-edit-hint field-input" data-field="Afsender land" placeholder="Land" style="width:50px;flex:none;text-transform:uppercase;" />
+              </div>
+              <div class="party-cvr"><span style="font-style:italic;">CVR:</span> <input class="field-input" data-field="Afsender CVR/VAT" placeholder="—" /></div>
+            </div>
+
+            <div class="party">
+              <div class="label">Modtager</div>
+              <input class="party-name-input party-input-edit-hint field-input" data-field="Modtager navn" placeholder="Modtager navn..." />
+              <input class="party-addr-input party-input-edit-hint field-input" data-field="Modtager gade" placeholder="Gade..." />
+              <div style="display:flex;gap:6px;align-items:baseline;">
+                <input class="party-addr-input party-input-edit-hint field-input" data-field="Modtager postnummer" placeholder="Postnr." style="width:60px;flex:none;" />
+                <input class="party-addr-input party-input-edit-hint field-input" data-field="Modtager by" placeholder="By" style="flex:1;" />
+                <input class="party-addr-input party-input-edit-hint field-input" data-field="Modtager land" placeholder="Land" style="width:50px;flex:none;text-transform:uppercase;" />
+              </div>
+              <div class="party-cvr"><span style="font-style:italic;">CVR/Org:</span> <input class="field-input" data-field="Modtager CVR/VAT" placeholder="—" /></div>
+            </div>
+          </div>
+
+          <div class="card-divider-v" style="min-width:0;">
+            <div class="label">Faktura &amp; forsendelse</div>
+            <table class="meta-table">
+              <tr><td>Sagsreference</td><td><input class="mono field-input" data-field="Afregningsreference" placeholder="—" /></td></tr>
+              <tr id="metaRowDato"><td>Dato</td><td id="metaDato">—</td></tr>
+              <tr><td>Incoterms</td><td><input class="field-input" data-field="Incoterms" placeholder="—" /></td></tr>
+              <tr><td>Valuta</td><td><input class="field-input" data-field="Valuta" placeholder="—" style="width:60px;" /></td></tr>
+              <tr><td>Totalsum</td><td><span class="mono num" id="metaTotalsum">—</span></td></tr>
+              <tr><td>Bruttovægt</td><td><input class="mono num field-input" data-field="Bruttovægt i alt (kg)" placeholder="—" style="width:80px;" /> <span style="color:var(--text-muted);font-size:12px;">kg</span></td></tr>
+              <tr><td>Nettovægt</td><td><input class="mono num field-input" data-field="Nettovægt i alt (kg)" placeholder="—" style="width:80px;" /> <span style="color:var(--text-muted);font-size:12px;">kg</span></td></tr>
+              <tr><td>Kolli</td><td><input class="num field-input" data-field="Antal kolli i alt" placeholder="—" style="width:60px;" /></td></tr>
+              <tr><td>Mål / volumen</td><td><input class="field-input" data-field="Maal / volumen i alt" placeholder="—" /></td></tr>
+              <tr><td>Oprindelse</td><td><input class="field-input" data-field="Oprindelsesland" placeholder="—" style="width:60px;" /></td></tr>
+              <tr><td>Transportmåde</td><td><input class="field-input" data-field="Transportmaade" placeholder="—" /></td></tr>
+              <tr><td colspan="2" class="meta-section-head">Økonomi</td></tr>
+              <tr><td>Fragtomkostning</td><td><input class="num field-input" data-field="Fragtomkostning" placeholder="—" /></td></tr>
+              <tr><td>Forsikring</td><td><input class="num field-input" data-field="Forsikringsvaerdi" placeholder="—" /></td></tr>
+              <tr><td>Toldværdi</td><td><input class="num field-input" data-field="Toldvaerdi i alt" placeholder="—" /></td></tr>
+              <tr><td>Tollkreditt</td><td><input class="field-input" data-field="Tollkreditt" placeholder="—" /></td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ KORT 3: FAKTURAER ═══ -->
+    <div class="card" id="fakturaerCard">
+      <div class="table-header">
+        <div class="table-title">Fakturaer</div>
+        <div class="table-tools">
+          <button class="icon-btn" onclick="addFaktura()" aria-label="Tilføj faktura" title="Tilføj faktura">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="data-table" style="table-layout:fixed;">
+          <colgroup>
+            <col style="width:32%"/><col style="width:24%"/><col style="width:14%"/><col style="width:22%"/><col style="width:38px"/>
+          </colgroup>
+          <thead><tr>
+            <th>Fakturanummer</th><th>Dato</th><th>Valuta</th><th class="num">Beløb</th><th></th>
+          </tr></thead>
+          <tbody id="fakturaer-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══ KORT 4: VARELINJER ═══ -->
+    <div class="card">
+      <div class="table-header">
+        <div class="table-title">Varelinjer</div>
+        <div class="table-tools">
+          <button class="icon-btn" onclick="sammenslaaEnsHS()" aria-label="Saml ens HS+COO" title="Saml linjer med samme HS-kode og COO">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 6h18M6 12h12M9 18h6"/>
+            </svg>
+          </button>
+          <button class="icon-btn" onclick="addVarelinje()" aria-label="Tilføj varelinje" title="Tilføj varelinje">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="data-table" style="table-layout:fixed;">
+          <colgroup>
+            <col style="width:38px"/><col style="width:88px"/><col style="width:96px"/><col/>
+            <col style="width:48px"/><col style="width:70px"/><col style="width:70px"/><col style="width:42px"/><col style="width:80px"/><col style="width:38px"/>
+          </colgroup>
+          <thead><tr>
+            <th>Nr</th><th>Fakturanr</th><th>HS-kode</th><th>Beskrivelse</th>
+            <th class="num">Antal</th><th class="num">Brutto</th><th class="num">Netto</th>
+            <th>COO</th><th class="num">Beløb</th><th></th>
+          </tr></thead>
+          <tbody id="varelinjer-tbody"></tbody>
+          <tfoot id="varelinjer-tfoot"></tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- Skjulte felter — bevarer kompatibilitet med eksisterende kode -->
+    <div style="display:none;" aria-hidden="true">
+      <input data-field="MRN" />
+    </div>
+
+  </div>
+
+  <div id="approveBanner">Kopieret til udklipsholder</div>
+
+</main>
+
+<div class="action-bar" id="actionBar" style="display:none;">
+  <div class="action-bar-inner">
+    <button class="btn btn-primary" onclick="onPrimaryAction()" id="primaryBtn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+      <span id="primaryBtnLbl">Gem til Emma</span>
+    </button>
+    <button class="btn" onclick="exportEmmaXML()" title="Download XML-fil(er) lokalt">Download XML</button>
+    <button class="btn" onclick="exportExcel()" title="Eksporter varelinjer som Excel">Excel</button>
+    <button class="btn" onclick="approveAndCopy()" title="Kopier data til udklipsholder">Kopier</button>
+    <div class="spacer"></div>
+    <button class="btn btn-secondary-danger" onclick="onSecondaryAction()" id="secondaryBtn">
+      <span id="secondaryBtnLbl">Ny PDF</span>
+    </button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════════════════════
+let extractedData = {};
+let pendingTokenId = null;
+let transportDetailOpen = false;
+let currentPdfFiles = [];
+
+const HEADER_SECTIONS = {
+  "Afsender": ["Afsender navn","Afsender gade","Afsender postnummer","Afsender by","Afsender land","Afsender CVR/VAT"],
+  "Modtager": ["Modtager navn","Modtager gade","Modtager postnummer","Modtager by","Modtager land","Modtager CVR/VAT"],
+  "Forsendelse": ["Afregningsreference","Incoterms","Transportmaade","Oprindelsesland","Tollkreditt"],
+  "Oekonomi": ["Valuta","Fragtomkostning","Forsikringsvaerdi","Toldvaerdi i alt"],
+  "Forsendelsesdetaljer": ["Antal kolli i alt","Nettovægt i alt (kg)","Bruttovægt i alt (kg)","Maal / volumen i alt"]
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  TAL-HJÆLPERE
+// ═══════════════════════════════════════════════════════════════════════════
+function normNum(s) {
+  if (s === null || s === undefined) return 0;
+  s = String(s).trim().replace(/\s/g,'');
+  if (!s) return 0;
+  if (s.includes(',') && s.includes('.')) {
+    if (s.lastIndexOf(',') > s.lastIndexOf('.')) s = s.replace(/\./g,'').replace(',','.');
+    else s = s.replace(/,/g,'');
+  } else if (s.includes(',')) s = s.replace(',','.');
+  const n = parseFloat(s);
+  return isFinite(n) ? n : 0;
+}
+function fmt(n, dec) { if (dec===undefined) dec=2; return Number(n).toLocaleString('da-DK', {minimumFractionDigits:dec, maximumFractionDigits:dec}); }
+function fmtKg(n) { if (Math.abs(n-Math.round(n))<0.01) return Math.round(n).toLocaleString('da-DK'); return Number(n).toLocaleString('da-DK', {minimumFractionDigits:1, maximumFractionDigits:3}); }
+function escHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+// Faglig sanity-check: HS-kode vs beskrivelse. Returnerer null hvis OK, ellers
+// et objekt {fagligt: forklaring}. Reglerne dækker KUN klare fag-mismatches —
+// 0 false positives tolereres (test: 19 cases mod alle kunder, ingen flag).
+function checkHsBeskrivelse(hs, beskrivelse) {
+  if (!hs || !beskrivelse) return null;
+  const cleanHs = String(hs).replace(/^\?/, '').replace(/\D/g, '');
+  if (cleanHs.length < 4) return null;
+  const k2 = cleanHs.substring(0, 2);
+  const b = String(beskrivelse).toUpperCase();
+  const regler = [
+    { ord: ['KØLESKAB','KØLE-FRYSER','FRYSER'],         kapitel: '84', undtag: ['8418'],         fagligt: 'Køleskab/fryser bør være kapitel 84 (typisk 8418xx)' },
+    { ord: ['OVN','OVNE'],                              kapitel: '85', undtag: ['8516','8514'],  fagligt: 'Ovne bør være kapitel 85 (typisk 8516xx)' },
+    { ord: ['SPEJL','SPEJLE'],                          kapitel: '70', undtag: ['7009'],         fagligt: 'Spejle bør være kapitel 70 (typisk 7009xx)' },
+    { ord: ['OPVASKEMASKINE','VASKEMASKINE'],           kapitel: '84', undtag: ['8422','8450'],  fagligt: 'Vaskemaskiner bør være kapitel 84' },
+    { ord: ['STÅLVASKE','RUSTFRI STÅLVASK'],            kapitel: '73', undtag: ['7324'],         fagligt: 'Stålvaske bør være kapitel 73 (typisk 7324xx)' },
+    { ord: ['HÆNGSL','BESLAG','GREB','SKINNE'],         kapitel: '83', undtag: ['8302'],         fagligt: 'Hængsler/beslag bør være kapitel 83 (typisk 8302xx)' },
+    { ord: ['KOGEAPPARAT','KOGEPLAD','KOMFUR'],         kapitel: '85', undtag: ['8516'],         fagligt: 'Kogeapparater bør være kapitel 85 (typisk 8516xx)' }
+  ];
+  for (const r of regler) {
+    if (r.ord.some(o => b.indexOf(o) >= 0)) {
+      const matchUndtag = r.undtag.some(u => cleanHs.startsWith(u));
+      const matchKapitel = k2 === r.kapitel;
+      if (!matchUndtag && !matchKapitel) {
+        return { fagligt: r.fagligt };
+      }
+      return null;
+    }
+  }
+  return null;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  TRANSPORT
+// ═══════════════════════════════════════════════════════════════════════════
+function erHavn(kode) {
+  var vej = ['DK005604','DK004706','DK005606','DK007908','SE060340','SE060341','SE603340','SE603360'];
+  return vej.indexOf(kode) === -1;
+}
+
+function updateToldsted() {
+  var sel = document.getElementById('selToldsted');
+  if (!sel) return;
+  var v = sel.value;
+  var baad = erHavn(v);
+  var koerer = document.getElementById('transportKoerer');
+  var baadDiv = document.getElementById('transportBaad');
+  if (koerer) koerer.style.display = baad ? 'none' : 'grid';
+  if (baadDiv) baadDiv.style.display = baad ? 'grid' : 'none';
+}
+
+function getTransportInfo() {
+  var erNoEx = document.getElementById('chkNOExport') && document.getElementById('chkNOExport').checked;
+  var erDkEx = document.getElementById('chkDKExport') && document.getElementById('chkDKExport').checked;
+  var erNoIm = document.getElementById('chkNOImport') && document.getElementById('chkNOImport').checked;
+  var brugNoEx = erNoEx && !erDkEx;
+  var brugNoIm = erNoIm && !erNoEx && !erDkEx;
+  var toldsted = document.getElementById('selToldsted') ? document.getElementById('selToldsted').value : 'DK003102';
+  var exitVal = document.getElementById('selExitToldsted') ? document.getElementById('selExitToldsted').value : 'same';
+  var exitToldsted = (exitVal === 'same') ? toldsted : exitVal;
+  var noExCode = '';
+  var selNoEx = document.getElementById('selNoExCustomsCode');
+  if (selNoEx) {
+    if (selNoEx.value === '__custom') {
+      var custom = document.getElementById('inputNoExCustomsCodeCustom');
+      noExCode = custom ? custom.value.trim() : '';
+    } else noExCode = selNoEx.value;
+  }
+  var noImCode = '';
+  var selNoIm = document.getElementById('selNoImCustomsCode');
+  if (selNoIm) {
+    if (selNoIm.value === '__custom') {
+      var customIm = document.getElementById('inputNoImCustomsCodeCustom');
+      noImCode = customIm ? customIm.value.trim() : '';
+    } else noImCode = selNoIm.value;
+  }
+  var base = {
+    toldsted: toldsted, exitToldsted: exitToldsted,
+    customsCode: brugNoIm ? noImCode : noExCode,
+    kundenummer: window._pendingKundenummer || '', kundeNavn: window._pendingKundeNavn || ''
+  };
+  if (brugNoEx) {
+    var noBilnr = document.getElementById('inputNoExBilnr') ? document.getElementById('inputNoExBilnr').value.trim() : '';
+    var noNat = document.getElementById('selNoExNationalitet') ? document.getElementById('selNoExNationalitet').value : 'PL';
+    return Object.assign(base, { erBaad:false, borderId:noBilnr, borderNat:noNat, arrivalId:noBilnr, arrivalNat:noNat });
+  }
+  if (brugNoIm) {
+    var noImBilnr = document.getElementById('inputNoImBilnr') ? document.getElementById('inputNoImBilnr').value.trim() : '';
+    var noImNat = document.getElementById('selNoImNationalitet') ? document.getElementById('selNoImNationalitet').value : 'DK';
+    return Object.assign(base, { erBaad:false, borderId:noImBilnr, borderNat:noImNat, arrivalId:noImBilnr, arrivalNat:noImNat });
+  }
+  var baad = erHavn(toldsted);
+  if (baad) {
+    var skibsnr = document.getElementById('inputSkibsnr') ? document.getElementById('inputSkibsnr').value.trim() : '';
+    return Object.assign(base, { erBaad:true, borderId:skibsnr, borderNat:'NO', arrivalId:skibsnr, arrivalNat:'DK' });
+  } else {
+    var bilnr = document.getElementById('inputBilnr') ? document.getElementById('inputBilnr').value.trim() : '';
+    var nat = document.getElementById('selNationalitet') ? document.getElementById('selNationalitet').value : 'DK';
+    return Object.assign(base, { erBaad:false, borderId:bilnr, borderNat:nat, arrivalId:bilnr, arrivalNat:nat });
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  UI-OPDATERINGER
+// ═══════════════════════════════════════════════════════════════════════════
+function onModuleChange() {
+  ['DKExport','DKImport','NOExport','NOImport'].forEach(id => {
+    const chk = document.getElementById('chk'+id);
+    const cssId = 'modChk'+id.replace('Export','Ex').replace('Import','Im');
+    const lbl = document.getElementById(cssId);
+    if (chk && lbl) {
+      const cls = id.replace('DKExport','on-dk-ex').replace('DKImport','on-dk-im').replace('NOExport','on-no-ex').replace('NOImport','on-no-im');
+      lbl.classList.toggle(cls, chk.checked);
+    }
+  });
+  document.getElementById('mrnWrap').style.display = document.getElementById('chkNOImport').checked ? 'flex' : 'none';
+  updateSectionVisibility();
+  updateTransportSummary();
+}
+
+function updateSectionVisibility() {
+  var dkEx = document.getElementById('chkDKExport') && document.getElementById('chkDKExport').checked;
+  var dkIm = document.getElementById('chkDKImport') && document.getElementById('chkDKImport').checked;
+  var noEx = document.getElementById('chkNOExport') && document.getElementById('chkNOExport').checked;
+  var noIm = document.getElementById('chkNOImport') && document.getElementById('chkNOImport').checked;
+  var dkSection = document.getElementById('dkExportSection');
+  var noSection = document.getElementById('noExportSection');
+  var noImSection = document.getElementById('noImportSection');
+  if (dkSection) dkSection.classList.toggle('show', dkEx || dkIm);
+  if (noSection) noSection.classList.toggle('show', noEx);
+  if (noImSection) noImSection.classList.toggle('show', noIm);
+  // Udgangstoldsted skjules ved kun DK Import (kun relevant for eksport)
+  var exitRow = document.getElementById('exitToldstedRow');
+  if (exitRow) exitRow.style.display = (dkIm && !dkEx) ? 'none' : '';
+}
+function updateNoExVisibility(){ updateSectionVisibility(); }
+
+function toggleTransportDetail() {
+  transportDetailOpen = !transportDetailOpen;
+  document.getElementById('transportDetail').classList.toggle('open', transportDetailOpen);
+  document.getElementById('btnTransportEdit').textContent = transportDetailOpen ? 'Skjul' : 'Rediger';
+}
+
+function updateTransportSummary() {
+  const ti = getTransportInfo();
+  const erNoIm = document.getElementById('chkNOImport') && document.getElementById('chkNOImport').checked;
+  const erNoEx = document.getElementById('chkNOExport') && document.getElementById('chkNOExport').checked;
+  const erDkEx = document.getElementById('chkDKExport') && document.getElementById('chkDKExport').checked;
+  const brugNoIm = erNoIm && !erNoEx && !erDkEx;
+
+  const toldstedNavn = (selVal, mapId) => {
+    const sel = document.getElementById(mapId);
+    if (!sel) return selVal;
+    const opt = Array.from(sel.options).find(o => o.value === selVal);
+    if (!opt) return selVal;
+    const txt = opt.textContent;
+    const m = txt.match(/—\s*(.+)/);
+    return m ? m[1].trim() : txt;
+  };
+
+  if (brugNoIm) {
+    // NO Import: vis norsk grænse som opstart
+    const noImGraense = toldstedNavn(ti.customsCode, 'selNoImCustomsCode') || ti.customsCode || '—';
+    document.getElementById('summaryOpstart').textContent = 'Norsk grænse: ' + noImGraense;
+    document.getElementById('summaryUdgang').textContent = '—';
+    document.getElementById('summaryForm').textContent = 'Landtransport';
+    document.getElementById('summaryBilSkib').textContent = ti.borderId || '—';
+  } else {
+    document.getElementById('summaryOpstart').textContent = toldstedNavn(ti.toldsted, 'selToldsted') || '—';
+    if (ti.toldsted === ti.exitToldsted) document.getElementById('summaryUdgang').textContent = '— samme —';
+    else document.getElementById('summaryUdgang').textContent = toldstedNavn(ti.exitToldsted, 'selExitToldsted') || ti.exitToldsted;
+    document.getElementById('summaryForm').textContent = ti.erBaad ? 'Sejler direkte' : 'Landtransport';
+    document.getElementById('summaryBilSkib').textContent = ti.borderId || '—';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  HANDLEFILES + LOADING
+// ═══════════════════════════════════════════════════════════════════════════
+async function handleFiles(fileList) {
+  const files = Array.from(fileList);
+  if (!files.length) return;
+  currentPdfFiles = files;
+  handleFile(files);
+}
+
+async function handleFile(files) {
+  if (!files || !files.length) return;
+  document.getElementById('errorBox').style.display = 'none';
+  document.getElementById('upload-section').style.display = 'none';
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('loading').style.display = 'block';
+  const fileNames = files.map(f => f.name).join(' + ');
+  document.getElementById('loadingFile').textContent = files.length > 1 ? files.length + ' filer: ' + fileNames : fileNames;
+  setStep(0);
+  setStep(1);
+  try {
+    const b64Array = await Promise.all(Array.from(files).map(f => new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = e => res(e.target.result.split(',')[1]);
+      r.onerror = () => rej(new Error('Kunne ikke læse ' + f.name));
+      r.readAsDataURL(f);
+    })));
+    setStep(2);
+    const b64 = b64Array[0];
+    let totalPages = 1;
+    try {
+      const pdfBytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+      const pdfText = new TextDecoder('latin1').decode(pdfBytes);
+      const pageMatches = pdfText.match(/\/Type\s*\/Page[^s]/g);
+      if (pageMatches) totalPages = pageMatches.length;
+    } catch(e) { totalPages = 1; }
+    const resp = await fetch("/api/extract-all", {
+      method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ b64Array: b64Array, totalPages: totalPages })
+    });
+    if (!resp.ok) {
+      const err = await resp.json().catch(()=>({}));
+      throw new Error(err.error || 'Server fejl: ' + resp.status);
+    }
+    setStep(3);
+    const parsed = await resp.json();
+    extractedData = parsed;
+    renderResults(parsed, fileNames);
+  } catch(err) { showError('Fejl: '+err.message); }
+}
+
+function setStep(n) {
+  document.querySelectorAll('.progress-step').forEach(el => {
+    const s = parseInt(el.dataset.step);
+    el.classList.remove('active','done');
+    if (s===n) el.classList.add('active');
+    else if (s<n) el.classList.add('done');
+  });
+}
+
+function showError(msg) {
+  const box = document.getElementById('errorBox');
+  box.textContent = msg;
+  box.style.display = 'block';
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('upload-section').style.display = 'block';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  RENDER RESULTS
+// ═══════════════════════════════════════════════════════════════════════════
+function renderResults(data, filename) {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('actionBar').style.display = 'flex';
+  document.getElementById('topbarActions').style.display = 'flex';
+
+  const ref = (data.header && data.header['Afregningsreference'] && data.header['Afregningsreference'].value) || '';
+  document.getElementById('topbarTitle').textContent = ref ? 'Sag · ' + ref : 'Handelsfaktura';
+
+  const noteEl = document.getElementById('aiNote');
+  if (data.notes) { noteEl.textContent = 'OBS: ' + data.notes; noteEl.style.display = 'block'; }
+  else { noteEl.style.display = 'none'; }
+
+  bindHeaderInputs(data.header || {});
+  buildFakturaer(data.fakturaer || []);
+  buildVarelinjer(data.varelinjer || []);
+  updateMetaTable();
+
+  const mrnFundet = (data.header && data.header['MRN'] && data.header['MRN'].value) ? data.header['MRN'].value.trim() : '';
+  if (mrnFundet) {
+    document.getElementById('inputMrn').value = mrnFundet;
+    document.getElementById('chkNOImport').checked = true;
+  }
+
+  onModuleChange();
+  updateToldsted();
+  updateTransportSummary();
+}
+
+function bindHeaderInputs(header) {
+  document.querySelectorAll('input[data-field]').forEach(inp => {
+    const key = inp.dataset.field;
+    const fd = header[key] || {value:'', confidence:'low'};
+    inp.value = fd.value || '';
+    inp.addEventListener('input', e => {
+      if (!extractedData.header) extractedData.header = {};
+      if (!extractedData.header[key]) extractedData.header[key] = {value:'', confidence:'low'};
+      extractedData.header[key].value = e.target.value;
+      document.querySelectorAll('input[data-field="'+key+'"]').forEach(other => {
+        if (other !== e.target) other.value = e.target.value;
+      });
+      updateMetaTable();
+    });
+  });
+}
+
+function updateMetaTable() {
+  const fakturaer = extractedData.fakturaer || [];
+  const dato = fakturaer.length > 0 ? (fakturaer[0].fakturadato || '—') : '—';
+  document.getElementById('metaDato').textContent = dato;
+  const total = fakturaer.reduce((s,f) => s + normNum(f.beloeb), 0);
+  const valuta = fakturaer.length > 0 ? (fakturaer[0].valuta || '') : '';
+  document.getElementById('metaTotalsum').textContent = total > 0 ? fmt(total) + (valuta ? ' ' + valuta : '') : '—';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  FAKTURAER
+// ═══════════════════════════════════════════════════════════════════════════
+function buildFakturaer(fakturaer) {
+  const tbody = document.getElementById('fakturaer-tbody');
+  tbody.innerHTML = '';
+  fakturaer.forEach((f, i) => tbody.appendChild(createFakturaRow(f, i)));
+}
+
+function createFakturaRow(f, i) {
+  const tr = document.createElement('tr');
+  tr.dataset.row = i;
+  [['fakturanummer','mono first'], ['fakturadato',''], ['valuta','mono'], ['beloeb','num mono last']].forEach(([key, cls]) => {
+    const td = document.createElement('td');
+    const inp = document.createElement('input');
+    inp.className = 'cell-input ' + cls;
+    inp.value = f[key] || '';
+    inp.placeholder = '—';
+    inp.addEventListener('input', e => {
+      if (extractedData.fakturaer[i]) extractedData.fakturaer[i][key] = e.target.value;
+      updateMetaTable();
+    });
+    td.appendChild(inp);
+    tr.appendChild(td);
+  });
+  const tdAct = document.createElement('td');
+  tdAct.className = 'row-actions';
+  tdAct.innerHTML = '<button class="row-del-btn" onclick="deleteFaktura(' + i + ')" aria-label="Slet"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 5h8M6 5V3a1 1 0 011-1h2a1 1 0 011 1v2M5 5l1 9a1 1 0 001 1h2a1 1 0 001-1l1-9"/></svg></button>';
+  tr.appendChild(tdAct);
+  return tr;
+}
+
+function addFaktura() {
+  const nf = {fakturanummer:'', fakturadato:'', beloeb:'', valuta:''};
+  if (!extractedData.fakturaer) extractedData.fakturaer = [];
+  extractedData.fakturaer.push(nf);
+  document.getElementById('fakturaer-tbody').appendChild(createFakturaRow(nf, extractedData.fakturaer.length-1));
+  updateMetaTable();
+}
+
+function deleteFaktura(i) {
+  if (!extractedData.fakturaer) return;
+  extractedData.fakturaer.splice(i, 1);
+  buildFakturaer(extractedData.fakturaer);
+  updateMetaTable();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  VARELINJER
+// ═══════════════════════════════════════════════════════════════════════════
+function buildVarelinjer(varelinjer) {
+  const tbody = document.getElementById('varelinjer-tbody');
+  tbody.innerHTML = '';
+  varelinjer.forEach((v, i) => tbody.appendChild(createVarelinje(v, i)));
+  updateVarelinjerSum();
+}
+
+function createVarelinje(v, i) {
+  const tr = document.createElement('tr');
+  tr.dataset.row = i;
+  const tdNr = document.createElement('td');
+  tdNr.className = 'row-num';
+  tdNr.textContent = (i+1);
+  tr.appendChild(tdNr);
+  const fordeltBrt = v._fordelt_brt === true;
+  // Hjælpefunktion til at opdatere HS-advarslen baseret på nuværende værdier
+  function updateHsWarn() {
+    const linje = extractedData.varelinjer[i] || {};
+    const r = checkHsBeskrivelse(linje.hs_kode, linje.beskrivelse);
+    const warn = tr.querySelector('.hs-warn');
+    if (!warn) return;
+    if (r) {
+      warn.style.display = 'inline-flex';
+      warn.title = '⚠ Mistænkelig HS-kode: ' + r.fagligt + '. Tjek mod faktura.';
+    } else {
+      warn.style.display = 'none';
+      warn.title = '';
+    }
+  }
+  [
+    ['fakturanummer','mono first'],
+    ['hs_kode','mono'],
+    ['beskrivelse',''],
+    ['antal','num'],
+    ['bruttovægt','num' + (fordeltBrt?' fordelt':'')],
+    ['nettovægt','num'],
+    ['coo',''],
+    ['beloeb','num mono last']
+  ].forEach(([key, cls]) => {
+    const td = document.createElement('td');
+    if (key === 'hs_kode') {
+      const wrap = document.createElement('div');
+      wrap.className = 'hs-cell';
+      const inp = document.createElement('input');
+      inp.className = 'cell-input ' + cls;
+      inp.value = v[key] || '';
+      inp.placeholder = '—';
+      inp.addEventListener('input', e => {
+        if (extractedData.varelinjer[i]) extractedData.varelinjer[i][key] = e.target.value;
+        updateHsWarn();
+      });
+      const warn = document.createElement('span');
+      warn.className = 'hs-warn';
+      warn.textContent = '⚠';
+      warn.style.display = 'none';
+      wrap.appendChild(inp);
+      wrap.appendChild(warn);
+      td.appendChild(wrap);
+    } else {
+      const inp = document.createElement('input');
+      inp.className = 'cell-input ' + cls;
+      inp.value = v[key] || '';
+      inp.placeholder = '—';
+      inp.addEventListener('input', e => {
+        if (extractedData.varelinjer[i]) extractedData.varelinjer[i][key] = e.target.value;
+        if (['bruttovægt','nettovægt','beloeb'].indexOf(key) > -1) updateVarelinjerSum();
+        if (key === 'beskrivelse') updateHsWarn();
+      });
+      td.appendChild(inp);
+    }
+    tr.appendChild(td);
+  });
+  const tdAct = document.createElement('td');
+  tdAct.className = 'row-actions';
+  tdAct.innerHTML = '<button class="row-del-btn" onclick="deleteVarelinje(' + i + ')" aria-label="Slet"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 5h8M6 5V3a1 1 0 011-1h2a1 1 0 011 1v2M5 5l1 9a1 1 0 001 1h2a1 1 0 001-1l1-9"/></svg></button>';
+  tr.appendChild(tdAct);
+  // Initial advarselstjek efter at row er bygget færdig
+  setTimeout(updateHsWarn, 0);
+  return tr;
+}
+
+function sammenslaaEnsHS() {
+  const linjer = extractedData.varelinjer || [];
+  if (linjer.length < 2) {
+    alert('Der er kun ' + linjer.length + ' varelinje(r) — intet at samle.');
+    return;
+  }
+
+  // Hjælpere
+  function normHS(hs) { return String(hs||'').replace(/\D/g,''); }
+  function normCOO(c) { return String(c||'').trim().toUpperCase(); }
+
+  // Gruppér efter (HS + COO) — fakturanr ignoreres
+  const grupper = {};
+  const rækkefølge = [];
+  linjer.forEach(v => {
+    const hs = normHS(v.hs_kode);
+    const coo = normCOO(v.coo);
+    const key = hs + '|' + coo;
+    if (!grupper[key]) {
+      grupper[key] = { linjer: [], hs: hs, coo: coo };
+      rækkefølge.push(key);
+    }
+    grupper[key].linjer.push(v);
+  });
+
+  const antalGrupper = rækkefølge.length;
+  if (antalGrupper === linjer.length) {
+    alert('Alle ' + linjer.length + ' varelinjer har allerede unik (HS-kode + COO) — intet at samle.');
+    return;
+  }
+
+  // Vis preview før vi laver ændringen
+  const preview = rækkefølge.map((key, i) => {
+    const g = grupper[key];
+    const n = g.linjer.length;
+    return (i+1) + '. HS ' + g.hs + ' / ' + (g.coo||'—') + ': ' + n + ' linje' + (n>1?'r':'') + ' → 1';
+  }).join('\n');
+
+  if (!confirm(
+    'Saml linjer med samme HS-kode + COO?\n\n' +
+    linjer.length + ' linjer bliver til ' + antalGrupper + ' linjer.\n\n' +
+    preview + '\n\n' +
+    'Fortsæt?'
+  )) return;
+
+  // Lav sammenslåede linjer
+  const nyeLinjer = rækkefølge.map(key => {
+    const g = grupper[key];
+    const første = g.linjer[0];
+
+    // Sum antal, vægte, beløb (med korrekt tal-håndtering)
+    let sumAntal = 0, sumBrutto = 0, sumNetto = 0, sumBeloeb = 0;
+    g.linjer.forEach(v => {
+      sumAntal  += normNum(v.antal);
+      sumBrutto += normNum(v.bruttovægt);
+      sumNetto  += normNum(v.nettovægt);
+      sumBeloeb += normNum(v.beloeb);
+    });
+
+    // Beskrivelse: første + (N varianter) hvis flere
+    let beskrivelse = første.beskrivelse || '';
+    if (g.linjer.length > 1) {
+      beskrivelse += ' (' + g.linjer.length + ' varianter)';
+    }
+
+    // Antal: hvis original havde decimaltal, behold som decimal — ellers heltal
+    const antalErHel = sumAntal === Math.floor(sumAntal);
+    const antalStr = antalErHel ? String(Math.round(sumAntal)) : String(sumAntal);
+
+    return {
+      fakturanummer: første.fakturanummer || '',
+      hs_kode: g.hs,
+      beskrivelse: beskrivelse,
+      antal: antalStr,
+      bruttovægt: sumBrutto > 0 ? String(sumBrutto) : '',
+      nettovægt: sumNetto > 0 ? String(sumNetto) : '',
+      coo: g.coo,
+      valuta: første.valuta || '',
+      beloeb: sumBeloeb > 0 ? String(sumBeloeb.toFixed(2)) : ''
+    };
+  });
+
+  extractedData.varelinjer = nyeLinjer;
+  buildVarelinjer(nyeLinjer);
+}
+
+function addVarelinje() {
+  const nv = {fakturanummer:'', hs_kode:'', beskrivelse:'', antal:'', nettovægt:'', bruttovægt:'', coo:'', valuta:'', beloeb:''};
+  if (!extractedData.varelinjer) extractedData.varelinjer = [];
+  extractedData.varelinjer.push(nv);
+  document.getElementById('varelinjer-tbody').appendChild(createVarelinje(nv, extractedData.varelinjer.length-1));
+  updateVarelinjerSum();
+}
+
+function deleteVarelinje(i) {
+  if (!extractedData.varelinjer) return;
+  extractedData.varelinjer.splice(i, 1);
+  buildVarelinjer(extractedData.varelinjer);
+}
+
+function updateVarelinjerSum() {
+  const v = extractedData.varelinjer || [];
+  const sumBrt = v.reduce((s,x) => s + normNum(x.bruttovægt), 0);
+  const sumNet = v.reduce((s,x) => s + normNum(x.nettovægt), 0);
+  const sumBel = v.reduce((s,x) => s + normNum(x.beloeb), 0);
+  const headerBV = normNum(((extractedData.header||{})['Bruttovægt i alt (kg)']||{}).value);
+  const headerNV = normNum(((extractedData.header||{})['Nettovægt i alt (kg)']||{}).value);
+  const totalFakBel = (extractedData.fakturaer||[]).reduce((s,f) => s + normNum(f.beloeb), 0);
+  const brtAfvig = headerBV > 0 && Math.abs(sumBrt - headerBV) > Math.max(1, headerBV * 0.01);
+  const netAfvig = headerNV > 0 && Math.abs(sumNet - headerNV) > Math.max(1, headerNV * 0.01);
+  const belAfvig = totalFakBel > 0 && Math.abs(sumBel - totalFakBel) > 0.5;
+  const tfoot = document.getElementById('varelinjer-tfoot');
+  if (v.length === 0) { tfoot.innerHTML = ''; return; }
+
+  let html = '<tr class="sum-row">' +
+    '<td colspan="5">Sum</td>' +
+    '<td class="num' + (brtAfvig ? ' warn' : '') + '">' + fmtKg(sumBrt) + '</td>' +
+    '<td class="num' + (netAfvig ? ' warn' : '') + '">' + fmtKg(sumNet) + '</td>' +
+    '<td></td>' +
+    '<td class="num' + (belAfvig ? ' warn' : '') + '">' + fmt(sumBel) + '</td>' +
+    '<td></td></tr>';
+
+  if (brtAfvig || netAfvig || belAfvig) {
+    const dele = [];
+    if (brtAfvig) {
+      const diff = sumBrt - headerBV;
+      const tegn = diff > 0 ? '+' : '−';
+      dele.push('Brutto afviger med <span class="diff">' + tegn + fmtKg(Math.abs(diff)) + ' kg</span> fra header (' + fmtKg(headerBV) + ' kg)');
+    }
+    if (netAfvig) {
+      const diff = sumNet - headerNV;
+      const tegn = diff > 0 ? '+' : '−';
+      dele.push('Netto afviger med <span class="diff">' + tegn + fmtKg(Math.abs(diff)) + ' kg</span> fra header (' + fmtKg(headerNV) + ' kg)');
+    }
+    if (belAfvig) {
+      const diff = sumBel - totalFakBel;
+      const tegn = diff > 0 ? '+' : '−';
+      dele.push('Beløb afviger med <span class="diff">' + tegn + fmt(Math.abs(diff)) + '</span> fra fakturatotal (' + fmt(totalFakBel) + ')');
+    }
+    html += '<tr class="sum-warn-row"><td colspan="10"><span class="pill">UOVERENSSTEMMELSE</span>' + dele.join(' · ') + '</td></tr>';
+  }
+
+  tfoot.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  PENDING-FLOW
+// ═══════════════════════════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  updateToldsted();
+  updateSectionVisibility();
+  const urlParams = new URLSearchParams(window.location.search);
+  const pendingId = urlParams.get('pending');
+  if (pendingId) loadPending(pendingId);
+});
+
+async function loadPending(id) {
+  pendingTokenId = id;
+  document.getElementById('upload-section').style.display = 'none';
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('loadingFile').textContent = 'Indlæser godkendelse...';
+  setStep(2);
+  try {
+    const resp = await fetch('/api/pending-data/' + id);
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.error || 'Godkendelse ikke fundet (status ' + resp.status + ')');
+    }
+    const p = await resp.json();
+    extractedData = p.data;
+    window._pendingKundenummer = p.kundenummer || '';
+    window._pendingKundeNavn = p.kundeNavn || '';
+    renderResults(p.data, 'Fra mail: ' + (p.emne || ''));
+
+    document.getElementById('pendingBanner').style.display = 'block';
+    var ukendtAdvarsel = p.erUkendtKunde
+      ? '<b style="color:var(--red-600);">UKENDT KUNDE</b> · afsender ' + escHtml(p.afsenderMail || 'ukendt') + ' er ikke på whitelisten. <b>Tjek alle felter ekstra grundigt.</b><br>'
+      : '';
+    document.getElementById('pendingBannerText').innerHTML = ukendtAdvarsel +
+      'Kunde: <b>' + escHtml(p.kundeNavn || '') + '</b> · Reference: <b>' + escHtml(p.ref || '') + '</b> · Afsender: ' + escHtml(p.afsenderMail || '');
+
+    const mi = p.mailInfo || {};
+    if (p.mailTekst || Object.keys(mi).length > 0) {
+      document.getElementById('pendingMailInfo').style.display = 'block';
+      const transportTekst = mi.erBaad
+        ? ('Sejler direkte' + (mi.skibsnr ? ' (skib ' + escHtml(mi.skibsnr) + ')' : ''))
+        : (mi.koererViaSverige ? 'Kører via Sverige' : (mi.bilnr ? 'Landtransport' : '—'));
+      const rows = [];
+      rows.push('<div><b>Moduler:</b> ' + escHtml((p.moduler||[]).join(' + ') || '—') + '</div>');
+      if (mi.sagsreference) rows.push('<div><b>Sagsref:</b> ' + escHtml(mi.sagsreference) + '</div>');
+      rows.push('<div><b>Transport:</b> ' + transportTekst + '</div>');
+      if (mi.bilnr) rows.push('<div><b>Bilnr:</b> ' + escHtml(mi.bilnr) + (mi.bilNationalitet ? ' (' + escHtml(mi.bilNationalitet) + ')' : '') + '</div>');
+      if (mi.skibsnr && !mi.bilnr) rows.push('<div><b>Skibsnr:</b> ' + escHtml(mi.skibsnr) + '</div>');
+      if (mi.specielleInstruktioner) rows.push('<div style="background:rgba(0,0,0,0.05);padding:5px 8px;border-radius:4px;margin-top:3px;"><b>Særlige instr.:</b> ' + escHtml(mi.specielleInstruktioner) + '</div>');
+      document.getElementById('pendingMailInfoBody').innerHTML = rows.join('');
+      document.getElementById('pendingMailTekst').textContent = (p.mailTekst || '(ingen mailtekst tilgængelig)').trim();
+    }
+
+    const moduler = p.moduler || [];
+    document.getElementById('chkDKExport').checked = moduler.includes('DK_EX');
+    document.getElementById('chkDKImport').checked = moduler.includes('DK_IM');
+    document.getElementById('chkNOExport').checked = moduler.includes('NO_EX');
+    document.getElementById('chkNOImport').checked = moduler.includes('NO_IM');
+
+    const t = p.transportObj || {};
+    const selT = document.getElementById('selToldsted');
+    const selE = document.getElementById('selExitToldsted');
+    if (selT && t.toldsted) { const opt = Array.from(selT.options).find(o => o.value === t.toldsted); if (opt) selT.value = t.toldsted; }
+    if (selE && t.exitToldsted) {
+      if (t.exitToldsted === t.toldsted) selE.value = 'same';
+      else { const opt = Array.from(selE.options).find(o => o.value === t.exitToldsted); if (opt) selE.value = t.exitToldsted; }
+    }
+    if (t.customsCode) {
+      const sel = document.getElementById('selNoExCustomsCode');
+      if (sel) {
+        const match = Array.from(sel.options).some(o => o.value === t.customsCode);
+        if (match) sel.value = t.customsCode;
+        else { sel.value = '__custom'; document.getElementById('noExCustomWrap').style.display = 'grid'; document.getElementById('inputNoExCustomsCodeCustom').value = t.customsCode; }
+      }
+    }
+    if (t.erBaad && t.borderId) { const inpS = document.getElementById('inputSkibsnr'); if (inpS) inpS.value = t.borderId; }
+    else if (t.borderId) {
+      const inpB = document.getElementById('inputBilnr'); if (inpB) inpB.value = t.borderId;
+      const inpNoB = document.getElementById('inputNoExBilnr'); if (inpNoB) inpNoB.value = t.borderId;
+      const selN = document.getElementById('selNationalitet'); if (selN && t.borderNat) selN.value = t.borderNat;
+      const selNoN = document.getElementById('selNoExNationalitet'); if (selNoN && t.borderNat) selNoN.value = t.borderNat;
+    }
+
+    // Multiple bilnr-options (NO Eksport)
+    const bilnrAlleOptions = mi.bilnrAlleOptions || [];
+    if (bilnrAlleOptions.length > 1 && document.getElementById('chkNOExport').checked) {
+      document.getElementById('noExBilnrOptionsWrap').style.display = 'block';
+      const optsEl = document.getElementById('noExBilnrOptions');
+      optsEl.innerHTML = '';
+      bilnrAlleOptions.forEach(b => {
+        const btn = document.createElement('button');
+        btn.className = 'bilnr-opt';
+        btn.textContent = b;
+        btn.onclick = () => {
+          document.getElementById('inputNoExBilnr').value = b;
+          updateTransportSummary();
+        };
+        optsEl.appendChild(btn);
+      });
+    }
+
+    updateToldsted();
+    onModuleChange();
+    updateTransportSummary();
+    document.getElementById('primaryBtnLbl').textContent = 'Godkend og send til Emma';
+    document.getElementById('secondaryBtnLbl').textContent = 'Afvis';
+  } catch(err) { showError('Fejl: ' + err.message); }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  PRIMARY / SECONDARY ACTIONS
+// ═══════════════════════════════════════════════════════════════════════════
+function onPrimaryAction() { if (pendingTokenId) godkendPending(); else gemTilEmmaMapper(); }
+function onSecondaryAction() { if (pendingTokenId) afvisPending(); else resetForm(); }
+
+async function godkendPending() {
+  if (!pendingTokenId) return;
+  if (!('showDirectoryPicker' in window)) { alert('Din browser understøtter ikke direkte mappe-adgang. Brug Chrome eller Edge, eller log ind via RDP til kontormaskinen.'); return; }
+  if (!confirm('GODKEND — gem til Emma?\n\nRef: ' + (extractedData.header?.['Afregningsreference']?.value || '?') + '\nKunde: ' + (extractedData.header?.['Modtager navn']?.value || '?') + '\n\nXML-filerne gemmes direkte i Emma-mapperne. Fortsæt?')) return;
+  const btn = document.getElementById('primaryBtn'); btn.disabled = true;
+  document.getElementById('primaryBtnLbl').textContent = 'Gemmer...';
+  try {
+    await gemTilEmmaMapper();
+    await fetch('/api/godkend/' + pendingTokenId + '/afslut', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ data: extractedData, transport: getTransportInfo() })
+    }).catch(()=>{});
+    window.location.href = '/';
+  } catch(err) {
+    alert('Fejl: ' + err.message);
+    btn.disabled = false;
+    document.getElementById('primaryBtnLbl').textContent = 'Godkend og send til Emma';
+  }
+}
+
+async function afvisPending() {
+  if (!pendingTokenId) return;
+  if (!confirm('AFVIS — kasser denne godkendelse?\n\nRef: ' + (extractedData.header?.['Afregningsreference']?.value || '?') + '\n\nIntet bliver sendt til Emma. Er du sikker?')) return;
+  try {
+    const resp = await fetch('/api/afvis/' + pendingTokenId + '/json', { method: 'POST' });
+    const r = await resp.json();
+    if (r.ok) { alert('AFVIST. Intet er sendt til Emma.'); window.location.href = '/'; }
+    else alert('Fejl: ' + (r.fejl || 'ukendt'));
+  } catch(err) { alert('Fejl: ' + err.message); }
+}
+
+function resetForm() {
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('actionBar').style.display = 'none';
+  document.getElementById('topbarActions').style.display = 'none';
+  document.getElementById('upload-section').style.display = 'block';
+  document.getElementById('fileInput').value = '';
+  document.getElementById('errorBox').style.display = 'none';
+  document.getElementById('topbarTitle').textContent = 'Tolddata · CW Spedition';
+  document.getElementById('pendingBanner').style.display = 'none';
+  extractedData = {};
+  currentPdfFiles = [];
+  pendingTokenId = null;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  PDF-PREVIEW
+// ═══════════════════════════════════════════════════════════════════════════
+function visPDF() {
+  if (currentPdfFiles.length === 0) { alert('Ingen PDF tilgængelig. (Vis PDF virker kun for manuelt uploadede filer i samme browser-session.)'); return; }
+  const file = currentPdfFiles[0];
+  const url = URL.createObjectURL(file);
+  window.open(url, '_blank');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  INDEXED-DB MAPPE-HANDLE
+// ═══════════════════════════════════════════════════════════════════════════
+function emmaDbAabn() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open('emmaFolders', 1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore('handles');
+    req.onsuccess = e => resolve(e.target.result);
+    req.onerror = e => reject(e.target.error);
+  });
+}
+async function emmaHandleHent() {
+  try {
+    const db = await emmaDbAabn();
+    return new Promise((resolve) => {
+      const tx = db.transaction('handles', 'readonly');
+      const req = tx.objectStore('handles').get('emmaRoot');
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => resolve(null);
+    });
+  } catch(e) { return null; }
+}
+async function emmaHandleGem(handle) {
+  const db = await emmaDbAabn();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('handles', 'readwrite');
+    tx.objectStore('handles').put(handle, 'emmaRoot');
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  GEM TIL EMMA-MAPPER
+// ═══════════════════════════════════════════════════════════════════════════
+async function gemTilEmmaMapper() {
+  if (!extractedData.header) { alert('Udtræk data fra en PDF-faktura først.'); return; }
+  var manglendeNumre = [];
+  (extractedData.fakturaer || []).forEach(function(f, i) {
+    if (!f.fakturanummer || !String(f.fakturanummer).trim()) manglendeNumre.push(i + 1);
+  });
+  if (manglendeNumre.length > 0) {
+    alert('FAKTURANUMMER MANGLER\n\nFaktura ' + manglendeNumre.join(', ') + ' har ikke noget fakturanummer.\n\nEmma kræver at fakturanummer er udfyldt.');
+    var fak = document.getElementById('fakturaerCard');
+    if (fak) fak.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
+  if (!('showDirectoryPicker' in window)) { alert('Din browser understøtter ikke direkte mappe-adgang. Brug Chrome eller Edge.'); return; }
+
+  var valg = [];
+  if (document.getElementById('chkDKExport').checked) valg.push({module:'DK', type:'export'});
+  if (document.getElementById('chkDKImport').checked) valg.push({module:'DK', type:'import'});
+  if (document.getElementById('chkNOExport').checked) valg.push({module:'NO', type:'export'});
+  if (document.getElementById('chkNOImport').checked) valg.push({module:'NO', type:'import'});
+  if (valg.length === 0) { alert('Vælg mindst et toldmodul.'); return; }
+
+  let rootHandle = await emmaHandleHent();
+  if (rootHandle) {
+    try {
+      const perm = await rootHandle.queryPermission({ mode: 'readwrite' });
+      if (perm !== 'granted') {
+        const newPerm = await rootHandle.requestPermission({ mode: 'readwrite' });
+        if (newPerm !== 'granted') rootHandle = null;
+      }
+    } catch(e) { rootHandle = null; }
+  }
+  if (rootHandle) {
+    var harDK = false, harNO = false;
+    try { await rootHandle.getDirectoryHandle('DK', { create: false }); harDK = true; } catch(e) {}
+    try { await rootHandle.getDirectoryHandle('NO', { create: false }); harNO = true; } catch(e) {}
+    if (!harDK && !harNO) {
+      try {
+        const db = await emmaDbAabn();
+        await new Promise((resolve) => { const tx = db.transaction('handles','readwrite'); tx.objectStore('handles').delete('emmaRoot'); tx.oncomplete=()=>resolve(); });
+      } catch(e) {}
+      rootHandle = null;
+      alert('Den gemte mappe er forkert. Vælg C:\\EmmaSped igen.');
+    }
+  }
+  if (!rootHandle) {
+    try {
+      alert('VÆLG EMMA-ROD-MAPPEN\n\nPeg på C:\\EmmaSped (selve EmmaSped-mappen), IKKE en undermappe.');
+      rootHandle = await window.showDirectoryPicker({ id: 'emmaRoot', mode: 'readwrite', startIn: 'documents' });
+      var harDKny = false, harNOny = false;
+      try { await rootHandle.getDirectoryHandle('DK', { create: false }); harDKny = true; } catch(e) {}
+      try { await rootHandle.getDirectoryHandle('NO', { create: false }); harNOny = true; } catch(e) {}
+      if (!harDKny && !harNOny) { alert('Mappen indeholder hverken DK- eller NO-undermappe. Prøv igen.'); return; }
+      await emmaHandleGem(rootHandle);
+    } catch(e) { if (e.name === 'AbortError') return; alert('Kunne ikke få adgang: ' + e.message); return; }
+  }
+
+  async function getXmlReaderFolder(module) {
+    const modFolder = await rootHandle.getDirectoryHandle(module, { create: false }).catch(() => { throw new Error('Mappen ' + module + ' findes ikke'); });
+    const prodFolder = await modFolder.getDirectoryHandle('Prod', { create: false }).catch(() => { throw new Error('Mappen ' + module + '\\Prod findes ikke'); });
+    return await prodFolder.getDirectoryHandle('XMLReader', { create: false }).catch(() => { throw new Error('Mappen ' + module + '\\Prod\\XMLReader findes ikke'); });
+  }
+
+  var resultater = [];
+  for (var i = 0; i < valg.length; i++) {
+    var v = valg[i];
+    try {
+      var params = new URLSearchParams();
+      params.append('data', JSON.stringify(extractedData));
+      params.append('type', v.type);
+      params.append('module', v.module);
+      params.append('transport', JSON.stringify(getTransportInfo()));
+      params.append('dryRun', '1');
+      if (v.type === 'import' && v.module === 'NO') {
+        var mrnVal = (document.getElementById('inputMrn') && document.getElementById('inputMrn').value.trim()) || '';
+        if (mrnVal) params.append('mrn', mrnVal);
+      }
+      var resp = await fetch('/api/export-xml', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: params.toString() });
+      if (!resp.ok) { var errText = await resp.text().catch(()=>''); throw new Error('Server fejl: ' + resp.status + (errText ? ' — ' + errText.substring(0,200) : '')); }
+      var xmlText = await resp.text();
+      var disposition = resp.headers.get('Content-Disposition') || '';
+      var filenameMatch = disposition.match(/filename="?([^"]+)"?/);
+      var filename = filenameMatch ? filenameMatch[1] : 'emma_' + v.module + '_' + v.type + '.xml';
+      var destFolder = await getXmlReaderFolder(v.module);
+      var fileHandle = await destFolder.getFileHandle(filename, { create: true });
+      var writable = await fileHandle.createWritable();
+      await writable.write(xmlText);
+      await writable.close();
+      await new Promise(r => setTimeout(r, 150));
+      resultater.push({ ok: true, filename: filename, module: v.module });
+    } catch(err) { resultater.push({ ok: false, filename: v.module+'_'+v.type, error: err.message }); }
+  }
+
+  var ok = resultater.filter(r => r.ok);
+  var fejl = resultater.filter(r => !r.ok);
+  var besked = '';
+  if (ok.length > 0) {
+    besked += '✓ Gemt ' + ok.length + ' fil(er):\n';
+    ok.forEach(r => { besked += '  • ' + r.filename + ' → ' + r.module + '\\Prod\\XMLReader\\\n'; });
+  }
+  if (fejl.length > 0) {
+    besked += '\n✗ Fejl på ' + fejl.length + ' fil(er):\n';
+    fejl.forEach(r => { besked += '  • ' + r.filename + ': ' + r.error + '\n'; });
+  }
+  alert(besked);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  EXPORT EMMA XML (download)
+// ═══════════════════════════════════════════════════════════════════════════
+function exportEmmaXML() {
+  if (!extractedData.header) { alert('Udtræk data fra en PDF-faktura først.'); return; }
+  var valg = [];
+  if (document.getElementById('chkDKExport').checked) valg.push({module:'DK', type:'export'});
+  if (document.getElementById('chkDKImport').checked) valg.push({module:'DK', type:'import'});
+  if (document.getElementById('chkNOExport').checked) valg.push({module:'NO', type:'export'});
+  if (document.getElementById('chkNOImport').checked) valg.push({module:'NO', type:'import'});
+  if (valg.length === 0) { alert('Vælg mindst et toldmodul.'); return; }
+  function downloadNaeste(i) {
+    if (i >= valg.length) return;
+    var v = valg[i];
+    var form = document.createElement('form');
+    form.method = 'POST'; form.action = '/api/export-xml';
+    var inputData = document.createElement('input'); inputData.type='hidden'; inputData.name='data'; inputData.value=JSON.stringify(extractedData);
+    var inputType = document.createElement('input'); inputType.type='hidden'; inputType.name='type'; inputType.value=v.type;
+    var inputModule = document.createElement('input'); inputModule.type='hidden'; inputModule.name='module'; inputModule.value=v.module;
+    var inputTransport = document.createElement('input'); inputTransport.type='hidden'; inputTransport.name='transport'; inputTransport.value=JSON.stringify(getTransportInfo());
+    form.appendChild(inputData); form.appendChild(inputType); form.appendChild(inputModule); form.appendChild(inputTransport);
+    if (v.type === 'import' && v.module === 'NO') {
+      var mrnVal = (document.getElementById('inputMrn') && document.getElementById('inputMrn').value.trim()) || '';
+      if (mrnVal) { var inputMrn = document.createElement('input'); inputMrn.type='hidden'; inputMrn.name='mrn'; inputMrn.value=mrnVal; form.appendChild(inputMrn); }
+    }
+    document.body.appendChild(form); form.submit();
+    setTimeout(function() { document.body.removeChild(form); setTimeout(function() { downloadNaeste(i+1); }, 1000); }, 500);
+  }
+  downloadNaeste(0);
+}
+
+function exportExcel() {
+  if (!extractedData.header) { alert('Udtræk data først.'); return; }
+  var valg = [];
+  if (document.getElementById('chkNOExport').checked) valg.push({module:'NO', type:'export'});
+  if (document.getElementById('chkNOImport').checked) valg.push({module:'NO', type:'import'});
+  if (document.getElementById('chkDKExport').checked) valg.push({module:'DK', type:'export'});
+  if (document.getElementById('chkDKImport').checked) valg.push({module:'DK', type:'import'});
+  if (valg.length === 0) valg.push({module:'NO', type:'import'});
+  var v = valg[0];
+  var form = document.createElement('form');
+  form.method = 'POST'; form.action = '/api/export-excel';
+  var inputData = document.createElement('input'); inputData.type='hidden'; inputData.name='data'; inputData.value=JSON.stringify(extractedData);
+  var inputType = document.createElement('input'); inputType.type='hidden'; inputType.name='type'; inputType.value=v.type;
+  var inputModule = document.createElement('input'); inputModule.type='hidden'; inputModule.name='module'; inputModule.value=v.module;
+  form.appendChild(inputData); form.appendChild(inputType); form.appendChild(inputModule);
+  document.body.appendChild(form); form.submit();
+  setTimeout(() => document.body.removeChild(form), 500);
+}
+
+function approveAndCopy() {
+  if (!extractedData.header) return;
+  let lines = ['TOLDDATA UDTRÆK','================','Dato: '+new Date().toLocaleDateString('da-DK'),''];
+  for(const [section,keys] of Object.entries(HEADER_SECTIONS)){
+    lines.push('--- '+section.toUpperCase()+' ---');
+    keys.forEach(k=>{ const v=document.querySelector(`input[data-field="${k}"]`)?.value?.trim(); if(v) lines.push(k+': '+v); });
+    lines.push('');
+  }
+  lines.push('--- FAKTURAER ---');
+  (extractedData.fakturaer||[]).forEach(f => lines.push([f.fakturanummer,f.fakturadato,f.valuta,f.beloeb].join('\t')));
+  lines.push('');
+  lines.push('--- VARELINJER ---');
+  (extractedData.varelinjer||[]).forEach(v => lines.push([v.fakturanummer,v.hs_kode,v.beskrivelse,v.antal,v.nettovægt,v.bruttovægt,v.coo,v.beloeb].join('\t')));
+  navigator.clipboard.writeText(lines.join('\n')).catch(()=>{});
+  const t = document.getElementById('approveBanner');
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 2000);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  DRAG & DROP
+// ═══════════════════════════════════════════════════════════════════════════
+const dz=document.getElementById('dropZone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
+dz.addEventListener('drop',e=>{
+  e.preventDefault();dz.classList.remove('drag-over');
+  const files = Array.from(e.dataTransfer.files).filter(f=>f.type==='application/pdf');
+  if(files.length>0) handleFiles(files);
+  else showError('Kun PDF-filer understøttes.');
+});
+</script>
+</body>
+</html>
