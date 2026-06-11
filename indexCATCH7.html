@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CW CATCH</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; color: #1a1a2e; }
+
+  /* TOP BAR */
+  .topbar { background: #1a1a2e; color: white; padding: 14px 32px; display: flex; align-items: center; justify-content: space-between; }
+  .topbar .logo { font-size: 18px; font-weight: 700; letter-spacing: 1px; }
+  .topbar .logo span { color: #4fc3f7; }
+
+  /* PROGRESS BAR */
+  .progress-bar { background: white; border-bottom: 1px solid #e0e0e0; padding: 0 32px; display: flex; align-items: center; gap: 0; }
+  .progress-step { display: flex; align-items: center; padding: 16px 24px; font-size: 13px; font-weight: 600; color: #999; border-bottom: 3px solid transparent; cursor: default; gap: 8px; }
+  .progress-step.active { color: #1a1a2e; border-bottom-color: #4fc3f7; }
+  .progress-step.done { color: #4caf50; border-bottom-color: #4caf50; }
+  .progress-step .step-num { width: 24px; height: 24px; border-radius: 50%; background: #e0e0e0; color: #666; font-size: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .progress-step.active .step-num { background: #4fc3f7; color: white; }
+  .progress-step.done .step-num { background: #4caf50; color: white; }
+  .progress-arrow { color: #ccc; font-size: 18px; }
+
+  /* MAIN */
+  .main { max-width: 1100px; margin: 32px auto; padding: 0 24px; }
+
+  /* UPLOAD PANEL */
+  #upload-panel { background: white; border-radius: 12px; padding: 40px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+  .upload-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+  .upload-sub { color: #666; margin-bottom: 28px; }
+  .dropzone { border: 2px dashed #c5d0e0; border-radius: 10px; padding: 48px 24px; text-align: center; cursor: pointer; transition: all 0.2s; background: #fafbfd; }
+  .dropzone:hover, .dropzone.drag { border-color: #4fc3f7; background: #e8f7fe; }
+  .dropzone svg { width: 48px; height: 48px; color: #90caf9; margin-bottom: 12px; }
+  .dropzone p { color: #555; font-size: 15px; }
+  .dropzone p span { color: #4fc3f7; font-weight: 600; }
+  .file-list { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .file-chip { background: #e8f5e9; color: #2e7d32; border-radius: 20px; padding: 5px 12px; font-size: 12px; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+  .file-chip svg { width: 14px; height: 14px; }
+
+  /* CONFIRM BANNER */
+  .confirm-banner { margin-top: 24px; background: #fff8e1; border: 1px solid #ffe082; border-radius: 8px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: gap; gap: 12px; }
+  .confirm-banner p { font-size: 14px; color: #5d4037; }
+  .confirm-banner p strong { color: #e65100; }
+  .btn-confirm { background: #ff6f00; color: white; border: none; border-radius: 8px; padding: 10px 24px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+  .btn-confirm:hover { background: #e65100; }
+
+  /* DOC PANELS */
+  .doc-panel { display: none; }
+  .doc-panel.active { display: block; }
+
+  /* DOC HEADER */
+  .doc-header { background: white; border-radius: 12px; padding: 24px 28px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+  .doc-header-left h2 { font-size: 20px; font-weight: 700; }
+  .doc-header-left p { color: #666; font-size: 13px; margin-top: 4px; }
+  .doc-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; letter-spacing: 0.5px; }
+  .badge-cc { background: #e3f2fd; color: #1565c0; }
+  .badge-ps { background: #f3e5f5; color: #6a1b9a; }
+  .badge-im { background: #e8f5e9; color: #1b5e20; }
+
+  /* SECTION CARD */
+  .section-card { background: white; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 16px; overflow: hidden; }
+  .section-header { padding: 16px 24px; background: #f8f9fc; border-bottom: 1px solid #e8eaed; display: flex; align-items: center; justify-content: space-between; }
+  .section-header h3 { font-size: 14px; font-weight: 700; color: #1a1a2e; text-transform: uppercase; letter-spacing: 0.5px; }
+  .section-tag { font-size: 11px; color: #888; font-weight: 500; }
+  .section-body { padding: 20px 24px; }
+
+  /* FIELDS */
+  .field-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; margin-bottom: 14px; }
+  .field-row:last-child { margin-bottom: 0; }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label { font-size: 11px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.4px; }
+  .field-value { background: #f8f9fc; border: 1px solid #e8eaed; border-radius: 6px; padding: 9px 12px; font-size: 14px; color: #1a1a2e; min-height: 38px; word-break: break-word; }
+  .field-value.empty { color: #bbb; font-style: italic; }
+  .field-value.highlight { background: #fff8e1; border-color: #ffe082; }
+
+  /* TABLE */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .data-table th { background: #f0f2f5; padding: 10px 12px; text-align: left; font-size: 11px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.4px; border-bottom: 2px solid #e0e0e0; white-space: nowrap; }
+  .data-table td { padding: 10px 12px; border-bottom: 1px solid #f0f2f5; vertical-align: top; }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: #fafbfd; }
+  .vessel-name { font-weight: 700; color: #1565c0; }
+
+  /* NAV BUTTONS */
+  .nav-row { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 20px; border-top: 1px solid #e0e0e0; }
+  .btn-nav { display: flex; align-items: center; gap: 8px; padding: 12px 28px; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; }
+  .btn-next { background: #1a1a2e; color: white; }
+  .btn-next:hover { background: #2d2d4e; }
+  .btn-back { background: white; color: #1a1a2e; border: 2px solid #e0e0e0; }
+  .btn-back:hover { border-color: #1a1a2e; }
+  .btn-disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-success { background: #2e7d32; color: white; }
+  .btn-success:hover { background: #1b5e20; }
+
+  /* LOADING */
+  #loading { display: none; text-align: center; padding: 60px; background: white; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+  .spinner { width: 48px; height: 48px; border: 4px solid #e0e0e0; border-top-color: #4fc3f7; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 20px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #loading p { color: #666; font-size: 15px; }
+
+  /* ERROR */
+  .error-box { background: #ffebee; border: 1px solid #ef9a9a; border-radius: 8px; padding: 16px 20px; color: #c62828; font-size: 14px; margin-top: 16px; }
+
+  /* NO PS notice */
+  .notice-box { background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 8px; padding: 14px 18px; color: #2e7d32; font-size: 14px; display: flex; align-items: center; gap: 10px; }
+
+  /* HIGHLIGHT TAG */
+  .tag-none { color: #bbb; font-style: italic; font-size: 13px; }
+  .tag-ja { color: #2e7d32; font-weight: 600; }
+  .tag-nej { color: #666; }
+
+  @media (max-width: 600px) {
+    .main { padding: 0 12px; }
+    .field-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">CW <span>CATCH</span></div>
+  <div style="font-size:12px; color:#90caf9;">Powered by Claude AI</div>
+</div>
+
+<!-- PROGRESS -->
+<div class="progress-bar">
+  <div class="progress-step active" id="step-cc">
+    <div class="step-num">1</div>
+    Fangstattest (CC)
+  </div>
+  <div class="progress-arrow">›</div>
+  <div class="progress-step" id="step-ps">
+    <div class="step-num">2</div>
+    Forarbejdningserklæring (PS)
+  </div>
+  <div class="progress-arrow">›</div>
+  <div class="progress-step" id="step-im">
+    <div class="step-num">3</div>
+    Importørerklæring (IM)
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- UPLOAD PANEL -->
+  <div id="upload-panel">
+    <div class="upload-title">Upload dokumenter</div>
+    <div class="upload-sub">Upload alle dokumenter for forsendelsen: CATCH certifikat, Annex B, Processing Statement, Health Certificate, Invoice, Packing List, Bill of Lading m.fl.</div>
+
+    <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
+      <p>Træk og slip PDF-filer her, eller <span>klik for at vælge</span></p>
+      <p style="font-size:12px; color:#aaa; margin-top:6px;">Kun PDF-filer accepteres</p>
+    </div>
+    <input type="file" id="fileInput" multiple accept=".pdf" style="display:none">
+    <div class="file-list" id="fileList"></div>
+
+    <div class="confirm-banner" id="confirm-banner" style="display:none">
+      <p><strong>Bekræft:</strong> Er dette en CATCH-opgave der skal registreres i TRACES?</p>
+      <button class="btn-confirm" id="btn-analyse">Ja, analysér dokumenter</button>
+    </div>
+    <div id="upload-error"></div>
+  </div>
+
+  <!-- LOADING -->
+  <div id="loading">
+    <div class="spinner"></div>
+    <p id="loading-text">Analyserer dokumenter med Claude AI...</p>
+  </div>
+
+  <!-- ===== DOC 1: CC ===== -->
+  <div id="panel-cc" class="doc-panel">
+    <div class="doc-header">
+      <div class="doc-header-left">
+        <h2>Dokument 1 af <span id="cc-total-docs">3</span>: Fangstattest</h2>
+        <p>Opret i CATCH: Tryk + Fangstattest → "Create new Catch Certificate (paper version)"</p>
+      </div>
+      <div class="doc-badge badge-cc">CC — Catch Certificate</div>
+    </div>
+
+    <!-- BOKS 1 -->
+    <div class="section-card">
+      <div class="section-header">
+        <h3>Boks 1 — Validating Authority</h3>
+        <span class="section-tag">Dokumentnummer + myndighed</span>
+      </div>
+      <div class="section-body">
+        <div class="field-row">
+          <div class="field">
+            <label>Dokumentnummer (skriv uden mellemrum)</label>
+            <div class="field-value highlight" id="cc-dok-nr"></div>
+          </div>
+          <div class="field">
+            <label>Validating Authority — navn</label>
+            <div class="field-value" id="cc-myndighed"></div>
+          </div>
+          <div class="field">
+            <label>Land (ISO-kode)</label>
+            <div class="field-value" id="cc-land"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOKS 2 -->
+    <div class="section-card">
+      <div class="section-header">
+        <h3>Boks 2 — Fiskefartøjer</h3>
+        <span class="section-tag">Tilføj ét fartøj ad gangen via "Select fishing vessel"</span>
+      </div>
+      <div class="section-body">
+        <div style="overflow-x:auto;">
+          <table class="data-table" id="cc-fartojer-table">
+            <thead>
+              <tr>
+                <th>Vessel name</th>
+                <th>Home port / Flag</th>
+                <th>Registreringsnr.</th>
+                <th>Kaldesignal</th>
+                <th>IMO / UVI</th>
+                <th>Fishing licence no.</th>
+                <th>Type of processing</th>
+              </tr>
+            </thead>
+            <tbody id="cc-fartojer-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOKS 3 -->
+    <div class="section-card">
+      <div class="section-header">
+        <h3>Boks 3 — Varebeskrivelse</h3>
+        <span class="section-tag">KN-kode → species → produktlinjer per fartøj</span>
+      </div>
+      <div class="section-body">
+        <div class="field-row">
+          <div class="field">
+            <label>KN-kode råprodukt (indsæt i "Select Commodities")</label>
+            <div class="field-value highlight" id="cc-kn-raa"></div>
+          </div>
+          <div class="field">
+            <label>Species (art)</label>
+            <div class="field-value" id="cc-species"></div>
+          </div>
+        </div>
+        <div style="margin-top:16px; overflow-x:auto;">
+          <table class="data-table" id="cc-prod-table">
+            <thead>
+              <tr>
+                <th>Fishing vessel</th>
+                <th>Catch area — FAO</th>
+                <th>EEZ / High seas</th>
+                <th>RFMO</th>
+                <th>Catch date from</th>
+                <th>Catch date to</th>
+                <th>Est. weight (kg)</th>
+                <th>Net catch (kg)</th>
+                <th>Verified (kg)</th>
+              </tr>
+            </thead>
+            <tbody id="cc-prod-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOKS 4 + 5 -->
+    <div class="section-card">
+      <div class="section-header">
+        <h3>Boks 4 + 5 — RFMO & Kaptajn</h3>
+      </div>
+      <div class="section-body">
+        <div class="field-row">
+          <div class="field">
+            <label>Boks 4 — RFMO reference</label>
+            <div class="field-value" id="cc-rfmo"></div>
+          </div>
+          <div class="field">
+            <label>Boks 5 — Master of fishing vessel</label>
+            <div class="field-value" id="cc-kaptajn"></div>
+          </div>
+          <div class="field">
+            <label>Boks 5 — Signature present</label>
+            <div class="field-value" id="cc-signatur"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOKS 6 + 7 -->
+    <div class="section-card" id="cc-omladning-card">
+      <div class="section-header">
+        <h3>Boks 6 + 7 — Omladning</h3>
+        <span class="section-tag">Kun udfylde hvis omladning har fundet sted</span>
+      </div>
+      <div class="section-body">
+        <div class="field-row">
+          <div class="field">
+            <label>Boks 6 — Omladning på havet</label>
+            <div class="field-value" id="cc-omladning-hav"></div>
+          </div>
+          <div class="field">
+            <label>Boks 6 — Omladningsfartøj</label>
+            <div class="field-value" id="cc-omladning-fartoj"></div>
+          </div>
+          <div class="field">
+            <label>Boks 6 — Dato</label>
+            <div class="field-value" id="cc-omladning-hav-dato"></div>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Boks 7 — Omladning i havn</label>
+            <div class="field-value" id="cc-omladning-havn"></div>
+          </div>
+          <div class="field">
+            <label>Boks 7 — Havn</label>
+            <div class="field-value" id="cc-omladning-havn-navn"></div>
+          </div>
+          <div class="field">
+            <label>Boks 7 — Dato</label>
+            <div class="field-value" id="cc-omladning-havn-dato"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOKS 8 -->
+    <div class="section-card">
+      <div class="section-header">
+        <h3>Boks 8 — Eksportør</h3>
+        <span class="section-tag">Søg på virksomhedsnavn eller opret ny operatør</span>
+      </div>
+      <div class="section-body">
+        <div class="field-row">
+          <div class="field">
+            <label>Navn</label>
+            <div class="field-value" id="cc-eksportoer"></div>
+          </div>
+          <div class="field">
+            <label>Land</label>
+            <div class="field-value" id="cc-eksportoer-land"></div>
+          </div>
+          <div class="field">
+            <label>Signature date</label>
+            <div class="field-value" id="cc-eksportoer-dato"></div>
+          </div>
+          <div class="field">
+            <label>Seal/stempel</label>
+            <div class="field-value" id="cc-eksportoer-stempel"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOKS 9 -->
+    <div class="section-card">
+      <div class="section-header">
+        <h3>Boks 9 — Flag State Authority Validation</h3>
+      </div>
+      <div class="section-body">
+        <div class="field-row">
+          <div class="field">
+            <label>Navn / titel</label>
+            <div class="field-value" id="cc-flagstate-navn"></div>
+          </div>
+          <div class="field">
+            <label>Dato</label>
+            <div class="field-value" id="cc-flagstate-dato"></div>
+          </div>
+          <div class="field">
+            <label>Seal/stempel</label>
+            <div class="field-value" id="cc-flagstate-stempel"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRANSPORT -->
+    <div class="section-card">
+      <div class="section-header">
+        <h3>Transport Details (fane i CATCH)</h3>
+        <span class="section-tag">Udfyldes under fanen "Transport details"</span>
+      </div>
+      <div class="section-body">
+        <div class="field-row">
+          <div class="field">
+            <label>Eksportland</label>
+            <div class="field-value" id="cc-trans-land"></div>
+          </div>
+          <div class="field">
+            <label>Afsendelseshavn</label>
+            <div class="field-value" id="cc-trans-havn"></div>
+          </div>
+          <div class="field">
+            <label>Transportmiddel</label>
+            <div class="field-value" id="cc-trans-middel"></div>
+          </div>
+          <div class="field">
+            <label>Skibsnavn / flag state</label>
+            <div class="field-value" id="cc-trans-skib"></div>
+          </div>
+          <div class="field">
+            <label>IMO-nummer (skib)</label>
+            <div class="field-value" id="cc-trans-skib-imo"></div>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Voyage number</label>
+            <div class="field-value highlight" id="cc-trans-voyage"></div>
+          </div>
+          <div class="field">
+            <label>Transport document reference (B/L nummer)</label>
+            <div class="field-value highlight" id="cc-trans-doc-ref"></div>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Containernummer</label>
+            <div class="field-value highlight" id="cc-trans-container"></div>
+          </div>
+          <div class="field">
+            <label>Plombenummer</label>
+            <div class="field-value highlight" id="cc-trans-plombe"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DOKUMENTATION -->
+    <div class="section-card">
+      <div class="section-header">
+        <h3>Dokumentation — Vedhæft kopi af fangstattest</h3>
+        <span class="section-tag">Tilføj ledsagedokument → "Catch certificate paper version"</span>
+      </div>
+      <div class="section-body">
+        <div class="field-row">
+          <div class="field">
+            <label>Fangstattest nummer</label>
+            <div class="field-value highlight" id="cc-doc-nr"></div>
+          </div>
+          <div class="field">
+            <label>Dato for udstedelse</label>
+            <div class="field-value" id="cc-doc-dato"></div>
+          </div>
+          <div class="field">
+            <label>Udstedende flagstat</label>
+            <div class="field-value" id="cc-doc-flagstat"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-row">
+      <div></div>
+      <button class="btn-nav btn-next" id="cc-next-btn" onclick="goToStep(2)">
+        Næste: Forarbejdningserklæring (PS)
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== DOC 2: PS ===== -->
+  <div id="panel-ps" class="doc-panel">
+    <div class="doc-header">
+      <div class="doc-header-left">
+        <h2>Dokument 2 af <span id="ps-total-docs">3</span>: Forarbejdningserklæring</h2>
+        <p>I CATCH: Fra CC'en klik "Next Follow up" → "Create new Processing Statement"</p>
+      </div>
+      <div class="doc-badge badge-ps">PS — Processing Statement</div>
+    </div>
+
+    <div id="ps-no-ps-notice" class="notice-box" style="display:none; margin-bottom:16px;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      Ingen Processing Statement fundet i dokumenterne. Spring dette trin over og gå direkte til Importørerklæringen.
+    </div>
+
+    <!-- PS HOVED -->
+    <div class="section-card" id="ps-content">
+      <div class="section-header">
+        <h3>Processing Statement — Hoveddokument</h3>
+        <span class="section-tag">Dokumentnummer + fabrik + ansvarlig</span>
+      </div>
+      <div class="section-body">
+        <div class="field-row">
+          <div class="field">
+            <label>PS Dokumentnummer</label>
+            <div class="field-value highlight" id="ps-dok-nr"></div>
+          </div>
+          <div class="field">
+            <label>KN-kode forarbejdet produkt</label>
+            <div class="field-value highlight" id="ps-kn"></div>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Processing plant — navn</label>
+            <div class="field-value" id="ps-fabrik-navn"></div>
+          </div>
+          <div class="field">
+            <label>Processing plant — adresse</label>
+            <div class="field-value" id="ps-fabrik-adresse"></div>
+          </div>
+          <div class="field">
+            <label>Approval number</label>
+            <div class="field-value" id="ps-fabrik-godkendelse"></div>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Responsible person</label>
+            <div class="field-value" id="ps-ansvarlig"></div>
+          </div>
+          <div class="field">
+            <label>Dato</label>
+            <div class="field-value" id="ps-dato"></div>
+          </div>
+          <div class="field">
+            <label>Sted</label>
+            <div class="field-value" id="ps-sted"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PS LINJER -->
+    <div class="section-card" id="ps-linjer-card">
+      <div class="section-header">
+        <h3>Catch Certificate Commodities</h3>
+        <span class="section-tag">Én linje per fartøj — indsæt catch processed og processed fishery product</span>
+      </div>
+      <div class="section-body" style="overflow-x:auto;">
+        <table class="data-table" id="ps-linjer-table">
+          <thead>
+            <tr>
+              <th>CC nummer</th>
+              <th>Vessel name / flag</th>
+              <th>Validation date</th>
+              <th>Catch description</th>
+              <th>Total landed weight (kg)</th>
+              <th>Catch processed (kg)</th>
+              <th>Processed fishery product (kg)</th>
+            </tr>
+          </thead>
+          <tbody id="ps-linjer-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PS SUNDHED -->
+    <div class="section-card" id="ps-sundhed-card">
+      <div class="section-header">
+        <h3>Sundhedscertifikat reference</h3>
+      </div>
+      <div class="section-body">
+        <div class="field-row">
+          <div class="field">
+            <label>Health certificate nummer</label>
+            <div class="field-value" id="ps-sundhed-nr"></div>
+          </div>
+          <div class="field">
+            <label>Dato</label>
+            <div class="field-value" id="ps-sundhed-dato"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PS ENDORSING AUTHORITY -->
+    <div class="section-card" id="ps-endorsing-card">
+      <div class="section-header">
+        <h3>Endorsing Authority</h3>
+        <span class="section-tag">Søg via "Avanceret søgning" på land — vælg korrekt myndighed</span>
+      </div>
+      <div class="section-body">
+        <div class="field-row">
+          <div class="field">
+            <label>Endorsing authority — navn</label>
+            <div class="field-value" id="ps-endorsing-navn"></div>
+          </div>
+          <div class="field">
+            <label>Endorsing authority — land</label>
+            <div class="field-value" id="ps-endorsing-land"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PS SIGNATURE DETAILS -->
+    <div class="section-card" id="ps-signature-card">
+      <div class="section-header">
+        <h3>Signature Details</h3>
+        <span class="section-tag">To underskrifter: ansvarlig person på fabrik + myndighedsperson</span>
+      </div>
+      <div class="section-body">
+        <div style="font-size:12px; font-weight:600; color:#888; text-transform:uppercase; letter-spacing:0.4px; margin-bottom:10px;">Ansvarlig person på forarbejdningsvirksomhed</div>
+        <div class="field-row">
+          <div class="field">
+            <label>Fulde navn</label>
+            <div class="field-value" id="ps-sig-ansvarlig-navn"></div>
+          </div>
+          <div class="field">
+            <label>Dato</label>
+            <div class="field-value" id="ps-sig-ansvarlig-dato"></div>
+          </div>
+          <div class="field">
+            <label>Signature present (sæt flueben)</label>
+            <div class="field-value" id="ps-sig-ansvarlig-sig"></div>
+          </div>
+        </div>
+        <div style="font-size:12px; font-weight:600; color:#888; text-transform:uppercase; letter-spacing:0.4px; margin:16px 0 10px;">Myndighedsperson (endorsing authority)</div>
+        <div class="field-row">
+          <div class="field">
+            <label>Fulde navn</label>
+            <div class="field-value" id="ps-sig-endorsing-navn"></div>
+          </div>
+          <div class="field">
+            <label>Dato</label>
+            <div class="field-value" id="ps-sig-endorsing-dato"></div>
+          </div>
+          <div class="field">
+            <label>Signature and Seal present (sæt flueben)</label>
+            <div class="field-value" id="ps-sig-endorsing-seal"></div>
+          </div>
+        </div>
+        <div style="font-size:12px; font-weight:600; color:#888; text-transform:uppercase; letter-spacing:0.4px; margin:16px 0 10px;">Dokumentnummer</div>
+        <div class="field-row">
+          <div class="field">
+            <label>PS udstedt efter 10. januar 2026?</label>
+            <div class="field-value" id="ps-efter-jan2026"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn-nav btn-back" onclick="goToStep(1)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+        Tilbage: CC
+      </button>
+      <button class="btn-nav btn-next" onclick="goToStep(3)">
+        Næste: Importørerklæring (IM)
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== DOC 3: IM ===== -->
+  <div id="panel-im" class="doc-panel">
+    <div class="doc-header">
+      <div class="doc-header-left">
+        <h2>Dokument 3 af <span id="im-total-docs">3</span>: Importørerklæring</h2>
+        <p>I CATCH: Fra PS'en klik "Next Follow up" → "Launch Importer Declaration"</p>
+      </div>
+      <div class="doc-badge badge-im">IM — Importer Declaration</div>
+    </div>
+
+    <!-- IMPORTØR -->
+    <div class="section-card">
+      <div class="section-header">
+        <h3>Importør og repræsentant</h3>
+        <span class="section-tag">OBS: Er du speditør, er du "Repræsentant for importøren"</span>
+      </div>
+      <div class="section-body">
+        <div class="field-row">
+          <div class="field">
+            <label>Importør — navn</label>
+            <div class="field-value" id="im-importoer-navn"></div>
+          </div>
+          <div class="field">
+            <label>Importør — adresse</label>
+            <div class="field-value" id="im-importoer-adresse"></div>
+          </div>
+          <div class="field">
+            <label>Importør — land</label>
+            <div class="field-value" id="im-importoer-land"></div>
+          </div>
+          <div class="field">
+            <label>Importør — EORI</label>
+            <div class="field-value" id="im-importoer-eori"></div>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Repræsentant (speditør) — navn</label>
+            <div class="field-value" id="im-repr-navn"></div>
+          </div>
+          <div class="field">
+            <label>Repræsentant — adresse</label>
+            <div class="field-value" id="im-repr-adresse"></div>
+          </div>
+          <div class="field">
+            <label>Repræsentant — land</label>
+            <div class="field-value" id="im-repr-land"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CATCH CERTIFICATE COMMODITIES -->
+    <div class="section-card">
+      <div class="section-header">
+        <h3>Catch Certificate Commodities</h3>
+        <span class="section-tag">Vælg KN-kode → indsæt nettovægt og net fishery product weight</span>
+      </div>
+      <div class="section-body">
+        <div class="field-row">
+          <div class="field">
+            <label>KN-kode (vælg under "Catch Certificate commodities")</label>
+            <div class="field-value highlight" id="im-kn"></div>
+          </div>
+          <div class="field">
+            <label>Nettovægt (kg)</label>
+            <div class="field-value highlight" id="im-nettovægt"></div>
+          </div>
+          <div class="field">
+            <label>Net fishery product weight (kg)</label>
+            <div class="field-value highlight" id="im-net-fishery"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRANSPORT IM -->
+    <div class="section-card">
+      <div class="section-header">
+        <h3>Transport Details</h3>
+        <span class="section-tag">Klik "Tilføj transportmiddel" og udfyld alle felter</span>
+      </div>
+      <div class="section-body">
+        <div class="field-row">
+          <div class="field">
+            <label>Eksportland</label>
+            <div class="field-value" id="im-eksportland"></div>
+          </div>
+          <div class="field">
+            <label>Port/airport/other place of departure</label>
+            <div class="field-value highlight" id="im-port-afgang"></div>
+          </div>
+          <div class="field">
+            <label>Point of destination</label>
+            <div class="field-value" id="im-bestemmelsessted"></div>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Skibsnavn / flag state</label>
+            <div class="field-value" id="im-skib"></div>
+          </div>
+          <div class="field">
+            <label>Voyage number</label>
+            <div class="field-value highlight" id="im-voyage-nr"></div>
+          </div>
+          <div class="field">
+            <label>Transport document reference (B/L)</label>
+            <div class="field-value highlight" id="im-trans-doc-ref"></div>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Containernummer</label>
+            <div class="field-value highlight" id="im-container"></div>
+          </div>
+          <div class="field">
+            <label>Plombenummer</label>
+            <div class="field-value highlight" id="im-plombe"></div>
+          </div>
+          <div class="field">
+            <label>Forsendelsen indeholder friske fisk</label>
+            <div class="field-value" id="im-frisk-fisk"></div>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Forventet ankomstdato</label>
+            <div class="field-value" id="im-ankomst"></div>
+          </div>
+          <div class="field">
+            <label>CHED nummer</label>
+            <div class="field-value" id="im-ched"></div>
+          </div>
+          <div class="field">
+            <label>Customs declaration number</label>
+            <div class="field-value" id="im-customs"></div>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Member State and office of import</label>
+            <div class="field-value" id="im-member-state"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn-nav btn-back" onclick="goToStep(2)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+        Tilbage: PS
+      </button>
+      <button class="btn-nav btn-success" onclick="alert('Alle tre dokumenter er gennemgået. CATCH-registreringen er klar til indsendelse.')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Færdig — alle dokumenter gennemgået
+      </button>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+let data = {};
+let files = [];
+
+// ---- FILE HANDLING ----
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const fileList = document.getElementById('fileList');
+const confirmBanner = document.getElementById('confirm-banner');
+
+dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'));
+dropzone.addEventListener('drop', e => { e.preventDefault(); dropzone.classList.remove('drag'); handleFiles(e.dataTransfer.files); });
+fileInput.addEventListener('change', e => handleFiles(e.target.files));
+
+function handleFiles(newFiles) {
+  for (const f of newFiles) {
+    if (f.type === 'application/pdf' && !files.find(x => x.name === f.name)) {
+      files.push(f);
+    }
+  }
+  renderFileList();
+  confirmBanner.style.display = files.length > 0 ? 'flex' : 'none';
+}
+
+function renderFileList() {
+  fileList.innerHTML = files.map(f => `
+    <div class="file-chip">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      ${f.name}
+    </div>`).join('');
+}
+
+// ---- ANALYSE ----
+document.getElementById('btn-analyse').addEventListener('click', async () => {
+  if (files.length === 0) return;
+
+  document.getElementById('upload-panel').style.display = 'none';
+  document.getElementById('loading').style.display = 'block';
+
+  try {
+    const b64Array = await Promise.all(files.map(fileToB64));
+    const resp = await fetch('/api/catch-extract', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ b64Array })
+    });
+
+    const result = await resp.json();
+    if (result.error) throw new Error(result.error);
+
+    data = result;
+    document.getElementById('loading').style.display = 'none';
+    populateAll(data);
+    goToStep(1);
+
+  } catch (err) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('upload-panel').style.display = 'block';
+    document.getElementById('upload-error').innerHTML = `<div class="error-box">Fejl: ${err.message}</div>`;
+  }
+});
+
+function fileToB64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(',')[1]);
+    r.onerror = () => rej(new Error('Kunne ikke læse fil'));
+    r.readAsDataURL(file);
+  });
+}
+
+// ---- NAVIGATION ----
+function goToStep(step) {
+  document.getElementById('panel-cc').classList.remove('active');
+  document.getElementById('panel-ps').classList.remove('active');
+  document.getElementById('panel-im').classList.remove('active');
+
+  ['cc','ps','im'].forEach((s,i) => {
+    const el = document.getElementById(`step-${s}`);
+    el.classList.remove('active','done');
+    if (i+1 < step) el.classList.add('done');
+    if (i+1 === step) el.classList.add('active');
+  });
+
+  if (step === 1) document.getElementById('panel-cc').classList.add('active');
+  if (step === 2) document.getElementById('panel-ps').classList.add('active');
+  if (step === 3) document.getElementById('panel-im').classList.add('active');
+
+  window.scrollTo(0, 0);
+}
+
+// ---- POPULATE ----
+function val(v) {
+  if (v === null || v === undefined || v === '' || v === 'null') return '<span class="tag-none">—</span>';
+  return v;
+}
+
+function populateAll(d) {
+  // Beregn antal dokumenter baseret på om PS findes
+  const psFindes = d.ps_findes === 'true' || d.ps_findes === true;
+  const totalDocs = psFindes ? 3 : 2;
+  document.getElementById('cc-total-docs').textContent = totalDocs;
+  document.getElementById('ps-total-docs').textContent = totalDocs;
+  document.getElementById('im-total-docs').textContent = totalDocs;
+
+  // Opdater PS knap i CC
+  if (!psFindes) {
+    document.getElementById('cc-next-btn').textContent = '';
+    document.getElementById('cc-next-btn').innerHTML = 'Næste: Importørerklæring (IM) <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>';
+    document.getElementById('cc-next-btn').onclick = () => goToStep(3);
+  }
+
+  // ===== CC =====
+  setField('cc-dok-nr', d.doc_fangstattest_nr);
+  setField('cc-myndighed', d.boks1_myndighed_navn);
+  setField('cc-land', d.boks1_land);
+
+  // Fartøjer
+  const fbody = document.getElementById('cc-fartojer-body');
+  fbody.innerHTML = '';
+  if (d.boks2_fartojer && d.boks2_fartojer.length > 0) {
+    d.boks2_fartojer.forEach(f => {
+      fbody.innerHTML += `<tr>
+        <td><span class="vessel-name">${f.navn || '—'}</span></td>
+        <td>${f.hjemhavn || '—'}</td>
+        <td>${f.registreringsnr || '—'}</td>
+        <td>${f.kaldesignal || '—'}</td>
+        <td>${f.imo || '—'}</td>
+        <td>${f.fiskerilicens || '—'}</td>
+        <td>${f.processing || 'n/a'}</td>
+      </tr>`;
+    });
+  } else {
+    fbody.innerHTML = '<tr><td colspan="7" class="tag-none" style="padding:12px;">Ingen fartøjer fundet</td></tr>';
+  }
+
+  setField('cc-kn-raa', d.boks3_kn_raaprodukt);
+  setField('cc-species', d.boks3_species);
+
+  // Produktlinjer
+  const pbody = document.getElementById('cc-prod-body');
+  pbody.innerHTML = '';
+  if (d.boks3_produktlinjer && d.boks3_produktlinjer.length > 0) {
+    d.boks3_produktlinjer.forEach(p => {
+      const estV = p.est_vaegt_kg || null;
+      const netV = p.net_catch_kg || null;
+      const verV = p.verified_kg || null;
+      pbody.innerHTML += `<tr>
+        <td><strong>${p.fartoej || '—'}</strong></td>
+        <td>${p.fao_zone || '—'}</td>
+        <td>${p.eez || '—'}</td>
+        <td>${p.rfmo || '—'}</td>
+        <td>${p.fangst_fra || '—'}</td>
+        <td>${p.fangst_til || '—'}</td>
+        <td>${estV ? Number(estV).toLocaleString('da-DK') : '<span class="tag-none">—</span>'}</td>
+        <td>${netV ? Number(netV).toLocaleString('da-DK') : '<span class="tag-none">—</span>'}</td>
+        <td>${verV ? Number(verV).toLocaleString('da-DK') : '<span class="tag-none">—</span>'}</td>
+      </tr>`;
+    });
+  }
+
+  setField('cc-rfmo', d.boks4_rfmo);
+  setField('cc-kaptajn', d.boks5_kaptajn_navn);
+  setField('cc-signatur', d.boks5_signatur);
+
+  setField('cc-omladning-hav', d.boks6_omladning_hav);
+  setField('cc-omladning-fartoj', d.boks6_omladningsfartoj);
+  setField('cc-omladning-hav-dato', d.boks6_omladningsdato);
+  setField('cc-omladning-havn', d.boks7_omladning_havn);
+  setField('cc-omladning-havn-navn', d.boks7_havn);
+  setField('cc-omladning-havn-dato', d.boks7_omladningsdato);
+
+  setField('cc-eksportoer', d.boks8_eksportoer_navn);
+  setField('cc-eksportoer-land', d.boks8_land);
+  setField('cc-eksportoer-dato', d.boks8_signatur_dato);
+  setField('cc-eksportoer-stempel', d.boks8_stempel);
+
+  setField('cc-flagstate-navn', d.boks9_navn);
+  setField('cc-flagstate-dato', d.boks9_signatur_dato);
+  setField('cc-flagstate-stempel', d.boks9_stempel);
+
+  setField('cc-trans-land', d.transport_eksportland);
+  setField('cc-trans-havn', d.transport_afsendelse);
+  setField('cc-trans-middel', d.transport_middel);
+  setField('cc-trans-skib', d.transport_skib);
+  setField('cc-trans-skib-imo', d.transport_skib_imo);
+  setField('cc-trans-voyage', d.transport_voyage_nr);
+  setField('cc-trans-doc-ref', d.transport_doc_reference);
+  setField('cc-trans-container', d.transport_container);
+  setField('cc-trans-plombe', d.transport_plombe);
+
+  setField('cc-doc-nr', d.doc_fangstattest_nr);
+  setField('cc-doc-dato', d.doc_udstedelsesdato);
+  setField('cc-doc-flagstat', d.doc_flagstat);
+
+  // ===== PS =====
+  if (!psFindes) {
+    document.getElementById('ps-no-ps-notice').style.display = 'flex';
+    document.getElementById('ps-content').style.display = 'none';
+    document.getElementById('ps-linjer-card').style.display = 'none';
+    document.getElementById('ps-sundhed-card').style.display = 'none';
+  } else {
+    setField('ps-dok-nr', d.ps_dokumentnummer);
+    setField('ps-kn', d.ps_kn_forarbejdet);
+    setField('ps-fabrik-navn', d.ps_fabrik_navn);
+    setField('ps-fabrik-adresse', d.ps_fabrik_adresse);
+    setField('ps-fabrik-godkendelse', d.ps_fabrik_godkendelsesnr);
+    setField('ps-ansvarlig', d.ps_ansvarlig_person);
+    setField('ps-dato', d.ps_dato);
+    setField('ps-sted', d.ps_sted);
+
+    const psbody = document.getElementById('ps-linjer-body');
+    psbody.innerHTML = '';
+    if (d.ps_linjer && d.ps_linjer.length > 0) {
+      d.ps_linjer.forEach(l => {
+        psbody.innerHTML += `<tr>
+          <td style="font-size:12px; color:#666;">${l.cc_nummer || '—'}</td>
+          <td><strong>${l.fartoej_navn || '—'}</strong><br><span style="color:#888;font-size:12px;">${l.fartoej_flag || ''}</span></td>
+          <td>${l.validering_dato || '—'}</td>
+          <td>${l.fangst_beskrivelse || '—'}</td>
+          <td>${l.total_landed_weight_kg ? Number(l.total_landed_weight_kg).toLocaleString('da-DK') : '—'}</td>
+          <td style="color:#6a1b9a; font-weight:600;">${l.catch_processed_kg ? Number(l.catch_processed_kg).toLocaleString('da-DK') : '—'}</td>
+          <td style="color:#6a1b9a; font-weight:600;">${l.processed_fishery_product_kg ? Number(l.processed_fishery_product_kg).toLocaleString('da-DK') : '—'}</td>
+        </tr>`;
+      });
+    }
+
+    setField('ps-sundhed-nr', d.ps_sundhedscert_nr);
+    setField('ps-sundhed-dato', d.ps_sundhedscert_dato);
+    setField('ps-endorsing-navn', d.ps_endorsing_authority_navn);
+    setField('ps-endorsing-land', d.ps_endorsing_authority_land);
+    setField('ps-sig-ansvarlig-navn', d.ps_ansvarlig_person);
+    setField('ps-sig-ansvarlig-dato', d.ps_dato);
+    setField('ps-sig-ansvarlig-sig', d.ps_ansvarlig_signatur);
+    setField('ps-sig-endorsing-navn', d.ps_endorsing_person_navn);
+    setField('ps-sig-endorsing-dato', d.ps_endorsing_person_dato);
+    setField('ps-sig-endorsing-seal', d.ps_endorsing_signature_seal);
+    const efterJan = d.ps_dok_efter_10jan2026 === 'true' || d.ps_dok_efter_10jan2026 === true;
+    setField('ps-efter-jan2026', efterJan ? 'Ja — indtast dokumentnummer: ' + (d.ps_dokumentnummer || '?') : 'Nej — sæt flueben i "Processing statement signed by the endorsing authority before 10 January 2026"');
+  }
+
+  // ===== IM =====
+  setField('im-importoer-navn', d.im_importoer_navn);
+  setField('im-importoer-adresse', d.im_importoer_adresse);
+  setField('im-importoer-land', d.im_importoer_land);
+  setField('im-importoer-eori', d.im_importoer_eori);
+  setField('im-repr-navn', d.im_repraesentant_navn);
+  setField('im-repr-adresse', d.im_repraesentant_adresse);
+  setField('im-repr-land', d.im_repraesentant_land);
+  setField('im-kn', d.im_kn_kode || d.boks3_kn_forarbejdet);
+  setField('im-nettovægt', d.im_nettovægt_kg);
+  setField('im-net-fishery', d.im_net_fishery_product_weight_kg);
+  setField('im-eksportland', d.im_eksportland || d.transport_eksportland);
+  setField('im-port-afgang', d.im_port_afgang || d.transport_afsendelse);
+  setField('im-bestemmelsessted', d.im_bestemmelsessted);
+  setField('im-skib', d.im_skib || d.transport_skib);
+  setField('im-voyage-nr', d.im_voyage_nr || d.transport_voyage_nr);
+  setField('im-trans-doc-ref', d.im_transport_doc_reference || d.transport_doc_reference);
+  setField('im-container', d.im_container || d.transport_container);
+  setField('im-plombe', d.im_plombe || d.transport_plombe);
+  setField('im-frisk-fisk', d.im_frisk_fisk === 'true' || d.im_frisk_fisk === true ? 'Ja — sæt flueben' : 'Nej — lad boks være tom');
+  setField('im-ankomst', d.im_forventet_ankomst);
+  setField('im-ched', d.im_ched_nummer);
+  setField('im-customs', d.im_customs_declaration_nr);
+  setField('im-member-state', d.im_member_state_import);
+}
+
+function setField(id, value) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (value === null || value === undefined || value === '' || value === 'null' || value === 'undefined') {
+    el.innerHTML = '<span class="tag-none">—</span>';
+    el.classList.add('empty');
+  } else {
+    el.textContent = value;
+    el.classList.remove('empty');
+  }
+}
+</script>
+</body>
+</html>
